@@ -14,10 +14,18 @@ axiosInstance.defaults.withXSRFToken = true;
 axiosInstance.defaults.withCredentials = true;
 
 axiosInstance.interceptors.request.use(config => {
-  const currentEcho = echo();
+  try {
+    const currentEcho = echo();
 
-  if (currentEcho.socketId()) {
-    config.headers["X-Socket-Id"] = currentEcho.socketId();
+    if (currentEcho && typeof currentEcho.socketId === "function") {
+      const socketId = currentEcho.socketId();
+
+      if (socketId) {
+        config.headers["X-Socket-Id"] = socketId;
+      }
+    }
+  } catch (error) {
+    console.warn("Echo not ready, skipping X-Socket-Id header", error);
   }
 
   return config;
