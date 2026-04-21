@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: ./../../
+      dockerfile: ./docker/dev/Dockerfile
+    image: app-client-dev
+    develop:
+      watch:
+        - path: ./../../src
+          action: sync
+          target: /app/src
+        - path: ./../../package.json
+          action: rebuild
+    env_file:
+      - path: ./.env
+        required: true
+    restart: always
+    ports:
+      - 3000:3000

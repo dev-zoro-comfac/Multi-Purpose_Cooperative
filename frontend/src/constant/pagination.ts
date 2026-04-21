@@ -1,0 +1,7 @@
+export const pageConfig = {
+  MINIMUM_PAGE_INDEX: 1,
+  MAXIMUM_PAGE_SIZE: 100,
+  MINIMUM_PAGE_SIZE: 1,
+  DEFAULT_PAGE_INDEX: 1,
+  DEFAULT_PAGE_SIZE: 10,
+} as const;
