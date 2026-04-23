@@ -3,7 +3,7 @@ import { echo } from "@laravel/echo-react";
 
 const axiosInstance = axiosLib.create({
   baseURL:
-    process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:8000/api",
+    process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://127.0.0.1:8000/api/v1",
   headers: {
     "X-Requested-With": "XMLHttpRequest",
     Accept: "application/json",
@@ -31,20 +31,18 @@ axiosInstance.interceptors.request.use(config => {
 });
 
 axiosInstance.interceptors.response.use(
-  response => {
-    return response;
-  },
+  response => response,
   error => {
     if (error.response) {
       const message = error?.response?.data?.message;
       return Promise.reject(new Error(message || "An error occurred"));
-    } else {
-      return Promise.reject(
-        new Error(
-          "Network Error: Unable to connect to the server. Please check your internet connection or try again later."
-        )
-      );
     }
+
+    return Promise.reject(
+      new Error(
+        "Network Error: Unable to connect to the server. Please check your internet connection or try again later."
+      )
+    );
   }
 );
 

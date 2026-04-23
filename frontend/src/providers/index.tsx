@@ -12,7 +12,9 @@ import timezone from "dayjs/plugin/timezone";
 import { configureEcho } from "@laravel/echo-react";
 import { echoOptions } from "@/lib/echo";
 
-configureEcho(echoOptions);
+if (process.env.NEXT_PUBLIC_REVERB_APP_KEY) {
+  configureEcho(echoOptions);
+}
 
 dayjs.extend(utc);
 dayjs.extend(timezone);

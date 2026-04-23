@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -67,7 +66,7 @@ class AuthController extends Controller
             'data' => [
                 'id' => $user->id,
                 'email' => $user->email,
-                'name' => $user->profile->full_name,
+                'name' => $user->profile?->full_name ?? $user->email,
                 'permissions' => $permissions,
                 'roles' => $roles,
             ]
