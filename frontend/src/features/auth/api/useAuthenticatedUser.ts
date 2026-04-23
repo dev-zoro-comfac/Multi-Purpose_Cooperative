@@ -15,7 +15,7 @@ export const emptyAuth = {
 };
 
 const getAuthenticatedUser = async (): Promise<AuthResponse> => {
-  const response = await axiosInstance.get<unknown>("auth/spa/authenticate");
+  const response = await axiosInstance.get<unknown>("/auth/spa/authenticate");
 
   const validatedResponse = authResponseSchema.safeParse(response.data);
 

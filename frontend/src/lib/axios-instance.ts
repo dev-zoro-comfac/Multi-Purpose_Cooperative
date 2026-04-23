@@ -16,7 +16,6 @@ axiosInstance.defaults.withCredentials = true;
 axiosInstance.interceptors.request.use(config => {
   try {
     const currentEcho = echo();
-
     if (currentEcho && typeof currentEcho.socketId === "function") {
       const socketId = currentEcho.socketId();
 

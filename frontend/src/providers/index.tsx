@@ -13,6 +13,7 @@ import { configureEcho } from "@laravel/echo-react";
 import { echoOptions } from "@/lib/echo";
 
 configureEcho(echoOptions);
+
 dayjs.extend(utc);
 dayjs.extend(timezone);
 

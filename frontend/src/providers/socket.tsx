@@ -6,9 +6,10 @@ import { useEchoNotification } from "@laravel/echo-react";
 
 const SocketListeners = () => {
   const queryClient = useQueryClient();
-  const { data: { data: authUser } = {} } = useAuthenticatedUser();
+  const { data: authResponse } = useAuthenticatedUser();
+  const authUser = authResponse?.data;
 
-  useEchoNotification(`users.${authUser?.id}`, () => {
+  useEchoNotification(authUser?.id ? `users.${authUser.id}` : "", () => {
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
   });
 

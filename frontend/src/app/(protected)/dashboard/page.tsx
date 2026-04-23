@@ -17,9 +17,10 @@ import { usePathname } from "next/navigation";
 
 const DashboardPage = () => {
   const pathname = usePathname();
-  const { data: { data: authUser } = {} } = useAuthenticatedUser();
+  const { data: authResponse } = useAuthenticatedUser();
+  const authUser = authResponse?.data;
 
-  const filteredMenu = useGetFilteredMenu();
+  const filteredMenu = useGetFilteredMenu() ?? [];
 
   return (
     <Container maxWidth="xl">
@@ -43,7 +44,7 @@ const DashboardPage = () => {
       {filteredMenu.map(group => (
         <Box key={group.id} sx={{ mb: 4 }}>
           <Grid container spacing={3}>
-            {group.children.map(item => {
+            {group.children?.map(item => {
               if (item.url === pathname) {
                 return null;
               }

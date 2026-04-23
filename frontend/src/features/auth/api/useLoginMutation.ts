@@ -11,9 +11,11 @@ type useLoginParamsType = {
 };
 
 const useLogin = async ({ email, password }: useLoginParamsType) => {
+  // STEP 1: CSRF
   await axiosInstance.get("/csrf-cookie");
 
-  await axiosInstance.post("auth/spa/login", {
+  // STEP 2: LOGIN
+  await axiosInstance.post("/auth/spa/login", {
     email,
     password,
   });
