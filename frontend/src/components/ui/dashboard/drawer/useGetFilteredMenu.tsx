@@ -4,6 +4,7 @@ import { useAuthenticatedUser } from "@/features/auth/api/useAuthenticatedUser";
 export const useGetFilteredMenu = () => {
   const { data: user } = useAuthenticatedUser();
   const userPermissions = user?.data?.permissions ?? [];
+  const userRoles = user?.data?.roles ?? [];
 
   const hasPermission = (
     requiredPermission?: string[],
@@ -28,18 +29,38 @@ export const useGetFilteredMenu = () => {
     .map(group => ({
       ...group,
       children: group.children
-        .filter(child =>
-          hasPermission(child.requiredPermission, child.matchExactPermission)
-        )
-        .map(child => ({
-          ...child,
-          children: child.children?.filter(subChild =>
-            hasPermission(
-              subChild.requiredPermission,
-              subChild.matchExactPermission
-            )
-          ),
-        }))
+        .filter(child => {
+  if (
+    child.id === "accounting-loans" &&
+    !(
+      userRoles.includes("admin") ||
+      userRoles.includes("accounting")
+    )
+  ) {
+    return false;
+  }
+
+  if (
+    child.id === "member-dashboard" &&
+    !userRoles.includes("member")
+  ) {
+    return false;
+  }
+
+  return hasPermission(
+    child.requiredPermission,
+    child.matchExactPermission
+  );
+})
+.map(child => ({
+  ...child,
+  children: child.children?.filter(subChild =>
+    hasPermission(
+      subChild.requiredPermission,
+      subChild.matchExactPermission
+    )
+  ),
+}))
         .filter(
           child =>
             child.type !== "collapse" ||

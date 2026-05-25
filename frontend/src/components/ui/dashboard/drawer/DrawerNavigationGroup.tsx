@@ -27,12 +27,25 @@ const DrawerNavigationGroup = ({ item }: DrawerNavigationGroupProps) => {
   };
 
   return (
-    <List>
-      <ListSubheader sx={{ position: "static", pl: 3, mb: 1.5 }}>
-        <Typography variant="subtitle2" color="textSecondary">
-          {item?.title}
-        </Typography>
-      </ListSubheader>
+    <List sx={{ px: 1.5, py: 1 }}>
+      <ListSubheader
+  sx={{
+    position: "static",
+    px: 1.5,
+    mb: 1,
+    bgcolor: "transparent",
+  }}
+>
+  <Typography
+    variant="caption"
+    color="text.secondary"
+    fontWeight={700}
+    textTransform="uppercase"
+    letterSpacing={0.8}
+  >
+    {item?.title}
+  </Typography>
+</ListSubheader>
 
       {item.children &&
         item.children.length > 0 &&
@@ -50,7 +63,12 @@ const DrawerNavigationGroup = ({ item }: DrawerNavigationGroupProps) => {
           return (
             <Fragment key={child.id}>
               <ListItemButtonStyled
-                sx={{ pl: 3 }}
+                sx={{
+                px: 2,
+                py: 1.1,
+                mb: 0.5,
+                borderRadius: 2,
+}}
                 onClick={() => {
                   if (isCollapsed) {
                     handleNestedLinkToggle(index);
@@ -95,7 +113,12 @@ const DrawerNavigationGroup = ({ item }: DrawerNavigationGroupProps) => {
                     child.children.map(innerChild => {
                       return (
                         <ListItemButtonStyled
-                          sx={{ pl: 3 }}
+                          sx={{
+                              px: 2,
+                              py: 1,
+                              mb: 0.5,
+                              borderRadius: 2,
+}}
                           key={innerChild.id}
                           onClick={() => {
                             if (innerChild.url) {

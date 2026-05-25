@@ -10,10 +10,34 @@ const LogoWithText = () => {
       underline="none"
       sx={{ display: "flex", alignItems: "center", color: "inherit" }}
     >
-      <Stack sx={{ flexDirection: "row", gap: 1.5, alignItems: "center" }}>
-        <Logo sx={{ fontSize: 28 }} />
-        <Typography variant="h4">App</Typography>
-      </Stack>
+      <Stack
+  sx={{
+    flexDirection: "row",
+    gap: 1.5,
+    alignItems: "center",
+  }}
+>
+  <Logo sx={{ fontSize: 32 }} />
+
+  <Stack spacing={0}>
+    <Typography
+      variant="h5"
+      fontWeight={800}
+      color="primary"
+      lineHeight={1}
+    >
+      MPCS
+    </Typography>
+
+    <Typography
+      variant="caption"
+      color="text.secondary"
+      lineHeight={1.2}
+    >
+      Cooperative System
+    </Typography>
+  </Stack>
+</Stack>
     </MuiLink>
   );
 };

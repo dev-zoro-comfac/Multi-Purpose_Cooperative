@@ -22,7 +22,7 @@ return new class extends Migration
 
         Schema::create($tableNames['permissions'], static function (Blueprint $table) {
             // $table->engine('InnoDB');
-            $table->ulid('id')->primary()->unique(); // permission id
+            $table->uuid('id')->primary(); // permission id
             $table->string('name');       // For MyISAM use string('name', 225); // (or 166 for InnoDB with Redundant/Compact row format)
             $table->string('guard_name'); // For MyISAM use string('guard_name', 25);
             $table->string('category');
@@ -33,7 +33,7 @@ return new class extends Migration
 
         Schema::create($tableNames['roles'], static function (Blueprint $table) use ($teams, $columnNames) {
             // $table->engine('InnoDB');
-            $table->ulid('id')->primary()->unique(); // role id
+            $table->uuid('id')->primary(); // role id
             if ($teams || config('permission.testing')) { // permission.testing is a fix for sqlite testing
                 $table->unsignedBigInteger($columnNames['team_foreign_key'])->nullable();
                 $table->index($columnNames['team_foreign_key'], 'roles_team_foreign_key_index');
@@ -73,7 +73,7 @@ return new class extends Migration
         });
 
         Schema::create($tableNames['model_has_roles'], static function (Blueprint $table) use ($tableNames, $columnNames, $pivotRole, $teams) {
-            $table->ulid($pivotRole);
+            $table->string($pivotRole, 36);
 
             $table->string('model_type');
             $table->ulid($columnNames['model_morph_key']);
@@ -95,9 +95,9 @@ return new class extends Migration
             }
         });
 
-        Schema::create($tableNames['role_has_permissions'], static function (Blueprint $table) use ($tableNames, $pivotRole, $pivotPermission) {
-            $table->ulid($pivotPermission);
-            $table->ulid($pivotRole);
+            Schema::create($tableNames['role_has_permissions'], static function (Blueprint $table) use ($tableNames, $pivotRole, $pivotPermission) {
+                $table->string($pivotPermission, 36);
+                $table->string($pivotRole, 36);
 
             $table->foreign($pivotPermission)
                 ->references('id') // permission id

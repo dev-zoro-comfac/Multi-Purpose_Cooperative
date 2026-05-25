@@ -35,7 +35,7 @@ const GlobalStyles = () => {
 
 const MaterialUiProvider = ({ children }: { children: ReactNode }) => {
   return (
-    <AppRouterCacheProvider>
+    <AppRouterCacheProvider options={{ enableCssLayer: true }}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <GlobalStyles />

@@ -17,6 +17,10 @@ return new class extends Migration
 $table->string('application_no')->nullable()->unique();
 
 $table->string('borrower_name');
+$table->foreignId('member_id')
+    ->nullable()
+    ->constrained('members')
+    ->nullOnDelete();
 $table->string('borrower_address')->nullable();
 $table->integer('borrower_age')->nullable();
 $table->string('borrower_civil_status')->nullable();
@@ -44,9 +48,9 @@ $table->enum('status', [
     'submitted_for_evaluation',
     'under_accounting_review',
     'approved',
-    'rejected',
+    'rejected', 
     'released',
-])->default('draft');
+])->default('submitted_for_evaluation');
 
 $table->text('accounting_notes')->nullable();
 $table->timestamp('submitted_at')->nullable();
@@ -55,7 +59,7 @@ $table->timestamp('rejected_at')->nullable();
 
 $table->timestamps();
         });
-    }
+    }  
 
     /**
      * Reverse the migrations.

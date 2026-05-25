@@ -7,60 +7,130 @@ use App\Models\LoanDocument;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
-
+use App\Models\LoanActivityLog;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\StoreLoanApplicationRequest;
+use App\Http\Requests\UpdateLoanApplicationRequest;
+use App\Http\Resources\LoanApplicationResource;
+use App\Services\LoanCalculatorService;
+use App\Models\LoanAmortization;
 
 class LoanApplicationController extends Controller
 {
     public function index()
-    {
-        return response()->json([
-            'success' => true,
-            'data' => LoanApplication::with('documents')->latest()->get(),
+{
+    return response()->json([
+        'success' => true,
+        'data' => LoanApplication::with([
+            'documents',
+            'activityLogs',
+        ])->latest()->get(),
+    ]);
+}
+
+    public function calculate(Request $request, LoanCalculatorService $calculator)
+{
+    $data = $request->validate([
+        'loan_amount' => 'required|numeric|min:1',
+        'annual_rate' => 'nullable|numeric|min:0',
+        'number_of_paydays' => 'required|integer|min:1',
+        'processing_fee' => 'nullable|numeric|min:0',
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'data' => $calculator->calculate($data),
+    ]);
+}
+
+    public function store(
+    StoreLoanApplicationRequest $request,
+    LoanCalculatorService $calculatorService
+) {
+    $data = $request->validated();
+
+    $calculation = $calculatorService->calculate([
+        'loan_amount' => $data['amount_requested'],
+        'annual_rate' => $data['annual_rate'] ?? 15,
+        'number_of_paydays' => $data['number_of_paydays'] ?? 24,
+        'processing_fee' => $data['processing_fee'] ?? 50,
+    ]);
+
+    $data['annual_rate'] = $calculation['annual_rate'];
+    $data['number_of_paydays'] = $calculation['number_of_paydays'];
+    $data['processing_fee'] = $calculation['processing_fee'];
+    $data['amortization_per_payday'] = $calculation['amortization_per_payday'];
+    $data['monthly_amortization'] = $calculation['monthly_amortization'];
+    $data['total_interest'] = $calculation['total_interest'];
+    $data['total_amount_payable'] = $calculation['total_amount_payable'];
+    $data['net_proceeds'] = $calculation['net_proceeds'];
+
+    $loan = LoanApplication::create($data);
+
+    $loan->update([
+        'application_no' => 'LOAN-' . str_pad($loan->id, 6, '0', STR_PAD_LEFT),
+    ]);
+
+    $loan->activityLogs()->create([
+    'user_id' => auth()->id(),
+    'action' => 'created',
+    'notes' => 'Loan application was submitted.',
+]); 
+
+    foreach ($calculation['schedule'] as $row) {
+        LoanAmortization::create([
+            'loan_application_id' => $loan->id,
+            'payday_no' => $row['payday_no'],
+            'amortization' => $row['amortization'],
+            'interest' => $row['interest'],
+            'principal' => $row['principal'],
+            'balance' => $row['balance'],
         ]);
     }
 
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'borrower_name' => 'required|string|max:255',
-            'borrower_address' => 'nullable|string|max:255',
-            'borrower_age' => 'nullable|integer|min:18',
-            'borrower_civil_status' => 'nullable|string|max:100',
-            'borrower_employer' => 'nullable|string|max:255',
-            'borrower_length_of_service' => 'nullable|string|max:100',
-            'amount_requested' => 'required|numeric|min:1',
-            'take_home_pay_15' => 'nullable|numeric',
-            'take_home_pay_30' => 'nullable|numeric',
-            'is_coop_member' => 'boolean',
-            'member_since' => 'nullable|date',
-            'co_maker_name' => 'nullable|string|max:255',
-            'co_maker_address' => 'nullable|string|max:255',
-            'co_maker_age' => 'nullable|integer|min:18',
-            'co_maker_civil_status' => 'nullable|string|max:100',
-            'co_maker_employer' => 'nullable|string|max:255',
-            'co_maker_length_of_service' => 'nullable|string|max:100',
-        ]);
-
-        $loan = LoanApplication::create($data);
-
-        $loan->update([
-            'application_no' => 'LOAN-' . str_pad($loan->id, 6, '0', STR_PAD_LEFT),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Loan application created.',
-            'data' => $loan->load('documents'),
-        ], 201);
-    }
-
+    return response()->json([
+        'success' => true,
+        'message' => 'Loan application created.',
+        'data' => new LoanApplicationResource(
+            $loan->load('documents', 'amortizations')
+        ),
+        'computation' => $calculation,
+    ], 201);
+}
     public function show(LoanApplication $loanApplication)
-    {
-        return response()->json([
-            'success' => true,
-            'data' => $loanApplication->load('documents'),
-        ]);
-    }
+{
+    return response()->json([
+        'success' => true,
+        'data' => new LoanApplicationResource(
+            $loanApplication->load([
+                'documents',
+                'activityLogs.user',
+                'amortizations',
+            ])
+        ),
+    ]);
+}
+
+
+public function downloadPdf(
+    LoanApplication $loanApplication
+) {
+    $loanApplication->load([
+        'documents',
+        'activityLogs.user',
+    ]);
+
+    $pdf = Pdf::loadView(
+        'pdf.loan-application',
+        [
+            'loan' => $loanApplication,
+        ]
+    );
+
+    return $pdf->download(
+        $loanApplication->application_no . '.pdf'
+    );
+}
 
     public function update(Request $request, LoanApplication $loanApplication)
     {
@@ -93,31 +163,63 @@ class LoanApplicationController extends Controller
         ]);
     }
 
-    public function generateDocuments(LoanApplication $loanApplication)
-{
-    $basePath = "loan-documents/generated/{$loanApplication->id}";
-    $fileName = "Loan Supporting Documents.pdf";
-    $filePath = "{$basePath}/loan-supporting-documents.pdf";
-
-    $pdf = Pdf::loadView('pdf.loan-supporting-documents', [
-        'loan' => $loanApplication,
-    ])->setPaper('legal', 'portrait');
-
-    Storage::disk('public')->put($filePath, $pdf->output());
-
-    LoanDocument::updateOrCreate(
+   public function generateDocuments(
+    LoanApplication $loanApplication
+) {
+    $documents = [
         [
-            'loan_application_id' => $loanApplication->id,
-            'document_type' => 'supporting_documents',
+            'type' => 'loan_application_form',
+            'view' => 'pdf.loan-application-form',
+            'file' => 'loan-application-form.pdf',
+            'name' => 'Loan Application Form.pdf',
         ],
         [
-            'file_name' => $fileName,
-            'file_path' => $filePath,
-            'status' => 'generated',
-            'is_signed' => false,
-            'generated_at' => now(),
-        ]
-    );
+            'type' => 'authorization_to_deduct',
+            'view' => 'pdf.authorization-to-deduct',
+            'file' => 'authorization-to-deduct.pdf',
+            'name' => 'Authorization To Deduct.pdf',
+        ],
+        [
+            'type' => 'promissory_note',
+            'view' => 'pdf.promissory-note',
+            'file' => 'promissory-note.pdf',
+            'name' => 'Promissory Note.pdf',
+        ],
+        [
+            'type' => 'supporting_documents',
+            'view' => 'pdf.loan-supporting-documents',
+            'file' => 'loan-supporting-documents.pdf',
+            'name' => 'Loan Supporting Documents.pdf',
+        ],
+    ];
+
+    foreach ($documents as $doc) {
+
+        $path = "loan-documents/generated/{$loanApplication->id}/{$doc['file']}";
+
+        $pdf = Pdf::loadView($doc['view'], [
+            'loan' => $loanApplication,
+        ]);
+
+        Storage::disk('public')->put(
+            $path,
+            $pdf->output()
+        );
+
+        LoanDocument::updateOrCreate(
+            [
+                'loan_application_id' => $loanApplication->id,
+                'document_type' => $doc['type'],
+            ],
+            [
+                'file_name' => $doc['name'],
+                'file_path' => $path,
+                'status' => 'generated',
+                'is_signed' => false,
+                'generated_at' => now(),
+            ]
+        );
+    }
 
     $loanApplication->update([
         'status' => 'documents_generated',
@@ -125,7 +227,7 @@ class LoanApplicationController extends Controller
 
     return response()->json([
         'success' => true,
-        'message' => 'Loan supporting documents generated successfully.',
+        'message' => 'Loan documents generated successfully.',
         'data' => $loanApplication->load('documents'),
     ]);
 }
@@ -133,7 +235,10 @@ class LoanApplicationController extends Controller
     public function uploadDocument(Request $request, LoanApplication $loanApplication)
     {
         $data = $request->validate([
-            'document_type' => 'required|in:supporting_documents',
+            'document_type' => [
+                'required',
+                'in:loan_application_form,authorization_to_deduct,promissory_note,supporting_documents',
+            ],
             'file' => 'required|file|mimes:pdf|max:10240',
         ]);
 
@@ -181,7 +286,10 @@ class LoanApplicationController extends Controller
 
     public function submitForEvaluation(LoanApplication $loanApplication)
     {
-        $requiredDocuments = [
+       $requiredDocuments = [
+    'loan_application_form',
+    'authorization_to_deduct',
+    'promissory_note',
     'supporting_documents',
 ];
 
@@ -210,10 +318,18 @@ class LoanApplicationController extends Controller
             'message' => 'Loan application submitted for evaluation.',
             'data' => $loanApplication->load('documents'),
         ]);
+
+        
 }
-    public function approve(LoanApplication $loanApplication)
+
+   public function approve(LoanApplication $loanApplication)
 {
-    if ($loanApplication->status !== 'submitted_for_evaluation') {
+    if (! in_array($loanApplication->status, [
+    'submitted_for_evaluation',
+    'reviewed',
+    'pending',
+    'created',
+])) {
         return response()->json([
             'success' => false,
             'message' => 'Loan is not ready for approval.',
@@ -223,6 +339,20 @@ class LoanApplicationController extends Controller
     $loanApplication->update([
         'status' => 'approved',
         'approved_at' => now(),
+        'approved_by' => Auth::id(),
+    ]);
+
+    $loanApplication->activityLogs()->create([
+    'user_id' => auth()->id(),
+    'action' => 'approved',
+    'notes' => 'Loan application was approved.',
+]);
+
+    LoanActivityLog::create([
+        'loan_application_id' => $loanApplication->id,
+        'user_id' => Auth::id(),
+        'action' => 'approved',
+        'notes' => 'Loan application approved.',
     ]);
 
     return response()->json([
@@ -232,9 +362,49 @@ class LoanApplicationController extends Controller
     ]);
 }
 
+public function release(
+    LoanApplication $loanApplication
+) {
+    if ($loanApplication->status !== 'approved') {
+        return response()->json([
+            'success' => false,
+            'message' => 'Loan is not approved yet.',
+        ], 422);
+    }
+
+    $loanApplication->update([
+        'status' => 'released',
+        'released_at' => now(),
+    ]);
+
+    $loanApplication->activityLogs()->create([
+    'user_id' => auth()->id(),
+    'action' => 'released',
+    'notes' => 'Loan proceeds were released to the borrower.',
+]);
+
+    LoanActivityLog::create([
+        'loan_application_id' => $loanApplication->id,
+        'user_id' => Auth::id(),
+        'action' => 'released',
+        'notes' => 'Loan released to borrower.',
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Loan released successfully.',
+        'data' => $loanApplication,
+    ]);
+}
+
 public function reject(Request $request, LoanApplication $loanApplication)
 {
-    if ($loanApplication->status !== 'submitted_for_evaluation') {
+    if (! in_array($loanApplication->status, [
+    'submitted_for_evaluation',
+    'reviewed',
+    'pending',
+    'created',
+])) {
         return response()->json([
             'success' => false,
             'message' => 'Loan is not ready for rejection.',
@@ -246,17 +416,81 @@ public function reject(Request $request, LoanApplication $loanApplication)
     ]);
 
     $loanApplication->update([
-        'status' => 'rejected',
-        'rejected_at' => now(),
-        'accounting_notes' => $data['accounting_notes'] ?? null,
-    ]);
+    'status' => 'rejected',
+    'rejected_at' => now(),
+    'accounting_notes' => $data['accounting_notes'] ?? null,
+]);
 
+$loanApplication->activityLogs()->create([
+    'user_id' => auth()->id(),
+    'action' => 'rejected',
+    'notes' => $request->accounting_notes ?: 'Loan application was rejected.',
+]);
+
+LoanActivityLog::create([
+    'loan_application_id' => $loanApplication->id,
+    'user_id' => Auth::id(),
+    'action' => 'rejected',
+    'notes' => $data['accounting_notes'] ?? null,
+]);
     return response()->json([
         'success' => true,
         'message' => 'Loan application rejected.',
         'data' => $loanApplication,
     ]);
-
-        
     }
+
+        public function review(LoanApplication $loanApplication)
+{
+    if ($loanApplication->status !== 'submitted_for_evaluation') {
+        return response()->json([
+            'success' => false,
+            'message' => 'Loan is not ready for review.',
+        ], 422);
+    }
+
+    $loanApplication->update([
+        'status' => 'reviewed',
+        'reviewed_at' => now(),
+        'reviewed_by' => Auth::id(),
+    ]);
+
+    LoanActivityLog::create([
+        'loan_application_id' => $loanApplication->id,
+        'user_id' => Auth::id(),
+        'action' => 'reviewed',
+        'notes' => 'Loan application reviewed.',
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Loan reviewed successfully.',
+        'data' => $loanApplication,
+    ]);
+}
+
+public function dashboard()
+{
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'total_loans' => LoanApplication::count(),
+            'pending_loans' => LoanApplication::where('status', 'submitted_for_evaluation')->count(),
+            'documents_generated' => LoanApplication::where('status', 'documents_generated')->count(),
+            'documents_uploaded' => LoanApplication::where('status', 'documents_uploaded')->count(),
+            'submitted_for_evaluation' => LoanApplication::where('status', 'submitted_for_evaluation')->count(),
+            'reviewed_loans' => LoanApplication::where('status', 'reviewed')->count(),
+            'approved_loans' => LoanApplication::where('status', 'approved')->count(),
+            'released_loans' => LoanApplication::where('status', 'released')->count(),
+            'rejected_loans' => LoanApplication::where('status', 'rejected')->count(),
+
+            'total_amount_requested' => LoanApplication::sum('amount_requested'),
+            'total_amount_approved' => LoanApplication::whereIn('status', ['approved', 'released'])
+                ->sum('amount_requested'),
+            'total_net_proceeds' => LoanApplication::whereIn('status', ['approved', 'released'])
+                ->sum('net_proceeds'),
+        ],
+    ]);
+}
+
 }

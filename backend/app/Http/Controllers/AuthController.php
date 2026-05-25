@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Member;
 
 class AuthController extends Controller
 {
@@ -59,6 +60,7 @@ class AuthController extends Controller
 
         $roles = $user->roles->pluck('name');
         $permissions = $user->getAllPermissions()->pluck('name');
+        $member = Member::where('user_id', $user->id)->first();
 
         return response()->json([
             'success' => true,
@@ -69,6 +71,12 @@ class AuthController extends Controller
                 'name' => $user->profile?->full_name ?? $user->email,
                 'permissions' => $permissions,
                 'roles' => $roles,
+                'member' => $member ? [
+                'id' => $member->id,
+                'member_no' => $member->member_no,
+                'first_name' => $member->first_name,
+                'last_name' => $member->last_name,
+] : null,
             ]
         ], 200);
     }

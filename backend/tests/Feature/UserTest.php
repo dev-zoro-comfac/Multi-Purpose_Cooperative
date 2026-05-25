@@ -34,8 +34,8 @@ test('can access list of users based on role', function ($role, $expectedStatus)
 })->with([
     [RoleEnum::SuperAdmin, 200],
     [RoleEnum::Admin, 200],
-    [RoleEnum::Employee, 200],
-    [RoleEnum::User, 200],
+    [RoleEnum::Employee, 403],
+    [RoleEnum::User, 403],
 ]);
 
 test('can create a user based on role', function ($role, $expectedStatus) {

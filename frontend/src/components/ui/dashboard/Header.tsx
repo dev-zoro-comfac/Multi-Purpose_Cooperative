@@ -135,11 +135,16 @@ const Header = () => {
       position="fixed"
       open={open && isDesktopScreen}
       color="inherit"
-      elevation={0}
+      elevation={1}
     >
       <Toolbar
-        sx={{ borderBottom: theme => `1px solid ${theme.palette.divider}` }}
-      >
+  sx={{
+    borderBottom: theme => `1px solid ${theme.palette.divider}`,
+    minHeight: "72px !important",
+    px: { xs: 2, md: 3 },
+    bgcolor: "background.paper",
+  }}
+>
         <IconButton
           color="inherit"
           edge="start"
@@ -157,9 +162,18 @@ const Header = () => {
         <Tooltip title="Notifications" arrow>
           <Box sx={{ position: "relative" }}>
             <Button
-              onClick={handleNotifClick}
-              sx={{ minWidth: "unset", width: "auto" }}
-            >
+  onClick={handleNotifClick}
+  sx={{
+    minWidth: "unset",
+    width: 42,
+    height: 42,
+    borderRadius: 3,
+    bgcolor: "background.default",
+    "&:hover": {
+      bgcolor: "primary.lighter",
+    },
+  }}
+>
               <NotificationsNoneIcon sx={{ margin: 0, padding: 0 }} />
 
               {(notificationData?.summary?.unread_count ?? 0) > 0 && (
@@ -667,14 +681,27 @@ const Header = () => {
 
         <Button
           onClick={handleProfileClick}
-          sx={{ gap: 1, marginLeft: "6px", padding: "6px", minWidth: "unset" }}
+          sx={{
+  gap: 1,
+  ml: 1,
+  px: 1.5,
+  py: 0.7,
+  borderRadius: 3,
+  minWidth: "unset",
+  bgcolor: "background.default",
+
+  "&:hover": {
+    bgcolor: "primary.lighter",
+  },
+}}
           variant="text"
         >
           <Avatar
             sx={{
-              width: 24,
-              height: 24,
-              fontSize: "0.700rem",
+              width: 34,
+              height: 34,
+              fontSize: "0.9rem",
+              fontWeight: 700,
               bgcolor: theme => theme.palette.primary.dark,
             }}
             alt=""
@@ -683,7 +710,8 @@ const Header = () => {
             {getNameInitials(data?.data?.name)}
           </Avatar>
           <Typography
-            variant="h6"
+            variant="subtitle1"
+            fontWeight={600}
             sx={{ display: { xs: "none", md: "block" } }}
           >
             {data?.data?.name ?? ""}
@@ -691,7 +719,7 @@ const Header = () => {
         </Button>
 
         <Menu
-          elevation={0}
+          elevation={1}
           anchorEl={anchorEl}
           id="account-menu"
           open={menuOpen}
@@ -757,7 +785,14 @@ const Header = () => {
         <Dialog
           open={openDialog}
           onClose={handleCloseDialog}
-          PaperProps={{ sx: { width: "100%", maxWidth: "400px", p: 2 } }}
+          PaperProps={{
+            sx: {
+            width: "100%",
+            maxWidth: "420px",
+            p: 2,
+            borderRadius: 4,
+  },
+}}
         >
           <DialogTitle variant="h4" sx={{ textAlign: "center" }}>
             Confirm Logout
@@ -769,6 +804,11 @@ const Header = () => {
           </DialogContent>
           <DialogActions sx={{ gap: 1, px: 3, pb: 3 }}>
             <Button
+              sx={{
+                borderRadius: 2,
+                textTransform: "none",
+                fontWeight: 600,
+              }}
               onClick={handleCloseDialog}
               color="primary"
               variant="outlined"
@@ -777,6 +817,11 @@ const Header = () => {
               Cancel
             </Button>
             <Button
+              sx={{
+                borderRadius: 2,
+                textTransform: "none",
+                fontWeight: 600,
+              }}
               onClick={handleLogout}
               color="error"
               variant="contained"

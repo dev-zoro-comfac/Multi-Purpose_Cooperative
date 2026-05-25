@@ -5,6 +5,7 @@ import { ComponentType } from "react";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import { RolePermission, UserPermission } from "@/constant/permissions";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 
 type MenuGroupItemChildren = {
   id: string;
@@ -117,6 +118,26 @@ const account: MenuGroup = {
       icon: PersonOutlineOutlinedIcon,
       description: "You can view your account details here",
     },
+
+    {
+  id: "member-dashboard",
+  title: "Borrower Home",
+  type: "item",
+  url: "/dashboard/member",
+  icon: DescriptionOutlinedIcon,
+  description:
+  "View your borrower account and loan status",
+},
+
+    {
+    id: "accounting-loans",
+    title: "Loan Applications",
+    type: "item",
+    url: "/dashboard/accounting/loans",
+    icon: DescriptionOutlinedIcon,
+    description: "View and approve loan applications",
+    }, 
+    
   ],
 };
 
