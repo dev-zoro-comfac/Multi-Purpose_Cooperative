@@ -10,88 +10,68 @@ use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
-
         $this->call([
             RolesAndPermissionsSeeder::class,
         ]);
 
-        $superAdmin = User::factory()
-            ->create([
+        $users = [
+            [
                 'email' => 'super.admin@test.com',
-                'password' => Hash::make('Test@123'),
-            ])->assignRole(RoleEnum::SuperAdmin->value);
-
-        $admin = User::factory()
-            ->create([
+                'role' => RoleEnum::SuperAdmin->value,
+                'first_name' => 'SUPER',
+                'last_name' => 'ADMIN',
+            ],
+            [
                 'email' => 'admin@test.com',
-                'password' => Hash::make('Test@123'),
-            ])->assignRole(RoleEnum::Admin->value);
-
-
-        $employee = User::factory()
-            ->create([
+                'role' => RoleEnum::Admin->value,
+                'first_name' => 'ADMIN',
+                'last_name' => 'ADMIN',
+            ],
+            [
+                'email' => 'accounting@test.com',
+                'role' => RoleEnum::Accounting->value,
+                'first_name' => 'ACCOUNTING',
+                'last_name' => 'ACCOUNTING',
+            ],
+            [
+                'email' => 'member@test.com',
+                'role' => RoleEnum::Member->value,
+                'first_name' => 'MEMBER',
+                'last_name' => 'MEMBER',
+            ],
+            [
                 'email' => 'employee@test.com',
-                'password' => Hash::make('Test@123'),
-            ])->assignRole(RoleEnum::Employee->value);
-
-        $user = User::factory()
-            ->create([
+                'role' => RoleEnum::Employee->value,
+                'first_name' => 'EMPLOYEE',
+                'last_name' => 'EMPLOYEE',
+            ],
+            [
                 'email' => 'user@test.com',
+                'role' => RoleEnum::User->value,
+                'first_name' => 'USER',
+                'last_name' => 'USER',
+            ],
+        ];
+
+        foreach ($users as $userData) {
+
+            $user = User::factory()->create([
+                'email' => $userData['email'],
                 'password' => Hash::make('Test@123'),
-            ])->assignRole(RoleEnum::User->value);
+            ]);
 
-        $superAdmin->profile()->save(
-            Profile::factory()->make(
-                [
-                    'first_name' => 'SUPER',
-                    'last_name' => 'ADMIN',
-                    'middle_name' => null,
-                    'contact_number' => "09999999999",
-                ]
-            )
-        );
+            $user->assignRole($userData['role']);
 
-        $admin->profile()->save(
-            Profile::factory()->make(
-                [
-                    'first_name' => 'ADMIN',
-                    'last_name' => 'ADMIN',
+            $user->profile()->save(
+                Profile::factory()->make([
+                    'first_name' => $userData['first_name'],
+                    'last_name' => $userData['last_name'],
                     'middle_name' => null,
-                    'contact_number' => "09999999999",
-                ]
-            )
-        );
-        
-        $employee->profile()->save(
-            Profile::factory()->make(
-                [
-                    'first_name' => 'EMPLOYEE',
-                    'last_name' => 'EMPLOYEE',
-                    'middle_name' => null,
-                    'contact_number' => "09999999999",
-                ]
-            )
-        );
-
-        $user->profile()->save(
-            Profile::factory()->make(
-                [
-                    'first_name' => 'USER',
-                    'last_name' => 'USER',
-                    'middle_name' => null,
-                    'contact_number' => "09999999999",
-                ]
-            )
-        );
-
-        $this->call([
-            // UserSeeder::class,
-        ]);
+                    'contact_number' => '09999999999',
+                ])
+            );
+        }
     }
 }

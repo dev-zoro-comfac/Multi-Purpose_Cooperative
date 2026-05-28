@@ -16,97 +16,144 @@ class RolesAndPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
-        // Reset cached roles and permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         DB::transaction(function () {
             foreach (UserPermissionEnum::cases() as $permission) {
-                Permission::create(['name' => $permission->value, 'category' => 'user']);
+                Permission::firstOrCreate(
+                    ['name' => $permission->value],
+                    ['category' => 'user']
+                );
             }
 
             foreach (RolePermissionEnum::cases() as $permission) {
-                Permission::create(['name' => $permission->value, 'category' => 'role']);
+                Permission::firstOrCreate(
+                    ['name' => $permission->value],
+                    ['category' => 'role']
+                );
             }
 
             foreach (PermissionPermissionEnum::cases() as $permission) {
-                Permission::create(['name' => $permission->value, 'category' => 'permission']);
+                Permission::firstOrCreate(
+                    ['name' => $permission->value],
+                    ['category' => 'permission']
+                );
             }
         });
 
-
-        // update cache to know about the newly created permissions (required if using WithoutModelEvents in seeders)
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        Role::create(['name' =>  RoleEnum::SuperAdmin->value])
-            ->givePermissionTo([
-                UserPermissionEnum::ViewMany->value,
-                UserPermissionEnum::ViewOne->value,
-                UserPermissionEnum::ViewAny->value,
-                UserPermissionEnum::ViewOwn->value,
-                UserPermissionEnum::ViewOptions->value,
-                UserPermissionEnum::ViewProtectedData->value,
-                UserPermissionEnum::Create->value,
-                UserPermissionEnum::Update->value,
-                UserPermissionEnum::SoftDelete->value,
-                UserPermissionEnum::HardDelete->value,
-                UserPermissionEnum::Restore->value,
-                UserPermissionEnum::Import->value,
-                UserPermissionEnum::Export->value,
+        $superAdmin = Role::firstOrCreate([
+            'name' => RoleEnum::SuperAdmin->value,
+            'guard_name' => 'web',
+        ]);
 
-                RolePermissionEnum::ViewMany->value,
-                RolePermissionEnum::ViewOne->value,
-                RolePermissionEnum::ViewAny->value,
-                RolePermissionEnum::ViewOwn->value,
-                RolePermissionEnum::ViewProtectedData->value,
-                RolePermissionEnum::Create->value,
-                RolePermissionEnum::Update->value,
-                RolePermissionEnum::HardDelete->value,
+        $admin = Role::firstOrCreate([
+            'name' => RoleEnum::Admin->value,
+            'guard_name' => 'web',
+        ]);
 
-                PermissionPermissionEnum::ViewMany->value,
-                PermissionPermissionEnum::ViewOne->value,
-                PermissionPermissionEnum::ViewAny->value,
-                PermissionPermissionEnum::ViewOwn->value,
-                PermissionPermissionEnum::ViewProtectedData->value,
-            ]);
+        $accounting = Role::firstOrCreate([
+            'name' => RoleEnum::Accounting->value,
+            'guard_name' => 'web',
+        ]);
 
-        Role::create(['name' => RoleEnum::Admin->value])
-            ->givePermissionTo([
-                UserPermissionEnum::ViewMany->value,
-                UserPermissionEnum::ViewOne->value,
-                UserPermissionEnum::ViewAny->value,
-                UserPermissionEnum::ViewOwn->value,
-                UserPermissionEnum::ViewOptions->value,
-                UserPermissionEnum::ViewProtectedData->value,
-                UserPermissionEnum::Create->value,
-                UserPermissionEnum::Update->value,
-                UserPermissionEnum::SoftDelete->value,
+        $member = Role::firstOrCreate([
+            'name' => RoleEnum::Member->value,
+            'guard_name' => 'web',
+        ]);
 
-                RolePermissionEnum::ViewMany->value,
-                RolePermissionEnum::ViewOne->value,
-                RolePermissionEnum::ViewAny->value,
-                RolePermissionEnum::ViewOwn->value,
-                RolePermissionEnum::ViewProtectedData->value,
-                RolePermissionEnum::Create->value,
-                RolePermissionEnum::Update->value,
-                RolePermissionEnum::HardDelete->value,
+        $employee = Role::firstOrCreate([
+            'name' => RoleEnum::Employee->value,
+            'guard_name' => 'web',
+        ]);
 
-                PermissionPermissionEnum::ViewMany->value,
-                PermissionPermissionEnum::ViewOne->value,
-                PermissionPermissionEnum::ViewAny->value,
-                PermissionPermissionEnum::ViewOwn->value,
-                PermissionPermissionEnum::ViewProtectedData->value,
-            ]);
+        $user = Role::firstOrCreate([
+            'name' => RoleEnum::User->value,
+            'guard_name' => 'web',
+        ]);
 
-        Role::create(['name' => RoleEnum::Employee->value])
-            ->givePermissionTo([
-                UserPermissionEnum::ViewOwn->value,
-                UserPermissionEnum::Update->value,
-            ]);
+        $superAdmin->givePermissionTo([
+            UserPermissionEnum::ViewMany->value,
+            UserPermissionEnum::ViewOne->value,
+            UserPermissionEnum::ViewAny->value,
+            UserPermissionEnum::ViewOwn->value,
+            UserPermissionEnum::ViewOptions->value,
+            UserPermissionEnum::ViewProtectedData->value,
+            UserPermissionEnum::Create->value,
+            UserPermissionEnum::Update->value,
+            UserPermissionEnum::SoftDelete->value,
+            UserPermissionEnum::HardDelete->value,
+            UserPermissionEnum::Restore->value,
+            UserPermissionEnum::Import->value,
+            UserPermissionEnum::Export->value,
 
-        Role::create(['name' => RoleEnum::User->value])
-            ->givePermissionTo([
-                UserPermissionEnum::ViewOwn->value,
-                UserPermissionEnum::Update->value,
-            ]);
+            RolePermissionEnum::ViewMany->value,
+            RolePermissionEnum::ViewOne->value,
+            RolePermissionEnum::ViewAny->value,
+            RolePermissionEnum::ViewOwn->value,
+            RolePermissionEnum::ViewProtectedData->value,
+            RolePermissionEnum::Create->value,
+            RolePermissionEnum::Update->value,
+            RolePermissionEnum::HardDelete->value,
+
+            PermissionPermissionEnum::ViewMany->value,
+            PermissionPermissionEnum::ViewOne->value,
+            PermissionPermissionEnum::ViewAny->value,
+            PermissionPermissionEnum::ViewOwn->value,
+            PermissionPermissionEnum::ViewProtectedData->value,
+        ]);
+
+        $admin->givePermissionTo([
+            UserPermissionEnum::ViewMany->value,
+            UserPermissionEnum::ViewOne->value,
+            UserPermissionEnum::ViewAny->value,
+            UserPermissionEnum::ViewOwn->value,
+            UserPermissionEnum::ViewOptions->value,
+            UserPermissionEnum::ViewProtectedData->value,
+            UserPermissionEnum::Create->value,
+            UserPermissionEnum::Update->value,
+            UserPermissionEnum::SoftDelete->value,
+
+            RolePermissionEnum::ViewMany->value,
+            RolePermissionEnum::ViewOne->value,
+            RolePermissionEnum::ViewAny->value,
+            RolePermissionEnum::ViewOwn->value,
+            RolePermissionEnum::ViewProtectedData->value,
+            RolePermissionEnum::Create->value,
+            RolePermissionEnum::Update->value,
+            RolePermissionEnum::HardDelete->value,
+
+            PermissionPermissionEnum::ViewMany->value,
+            PermissionPermissionEnum::ViewOne->value,
+            PermissionPermissionEnum::ViewAny->value,
+            PermissionPermissionEnum::ViewOwn->value,
+            PermissionPermissionEnum::ViewProtectedData->value,
+        ]);
+
+        $accounting->givePermissionTo([
+            UserPermissionEnum::ViewMany->value,
+            UserPermissionEnum::ViewOne->value,
+            UserPermissionEnum::ViewAny->value,
+            UserPermissionEnum::ViewOwn->value,
+            UserPermissionEnum::Update->value,
+        ]);
+
+        $member->givePermissionTo([
+            UserPermissionEnum::ViewOwn->value,
+            UserPermissionEnum::Update->value,
+        ]);
+
+        $employee->givePermissionTo([
+            UserPermissionEnum::ViewOwn->value,
+            UserPermissionEnum::Update->value,
+        ]);
+
+        $user->givePermissionTo([
+            UserPermissionEnum::ViewOwn->value,
+            UserPermissionEnum::Update->value,
+        ]);
+
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
     }
 }
