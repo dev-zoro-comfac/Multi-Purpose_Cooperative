@@ -29,7 +29,6 @@ import {
   downloadLoanDocumentUrl,
   getLoans,
   rejectLoan,
-  releaseLoan,
 } from "@/lib/api/loan";
 
 type LoanDocument = {
@@ -226,28 +225,6 @@ const AccountingLoansPage = () => {
   } catch (error) {
     setSnackbarMessage(
       getErrorMessage(error, "Failed to reject loan application.")
-    );
-    setSnackbarSeverity("error");
-    setSnackbarOpen(true);
-  } finally {
-    setIsSubmittingAction(false);
-  }
-};
-
-  const handleRelease = async (loanId: number) => {
-  try {
-    setIsSubmittingAction(true);
-
-    await releaseLoan(loanId);
-
-    refreshLoans();
-
-    setSnackbarMessage("Loan released successfully.");
-    setSnackbarSeverity("success");
-    setSnackbarOpen(true);
-  } catch (error) {
-    setSnackbarMessage(
-      getErrorMessage(error, "Failed to release loan.")
     );
     setSnackbarSeverity("error");
     setSnackbarOpen(true);
@@ -611,13 +588,14 @@ const AccountingLoansPage = () => {
                   }}
                   >
                     <Chip
-                      label={`● ${formatStatus(loan.status)}`}
+                      label={formatStatus(loan.status)}
                       color={getStatusColor(loan.status)}
                       sx={{
                         fontWeight: 700,
                         borderRadius: 2,
+                        px: 1,
                       }}
-                    />
+                      />
 
                     <Button
                       variant="contained"

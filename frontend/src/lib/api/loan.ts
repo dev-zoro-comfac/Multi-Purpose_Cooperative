@@ -29,5 +29,10 @@ export const downloadLoanDocumentUrl = (
     "http://localhost:8000/api/v1"
   }/loan-documents/${documentId}/download`;
 
-export const createLoan = (data: any) =>
+type CreateLoanPayload = Record<
+  string,
+  string | number | null | undefined
+>;
+
+export const createLoan = (data: CreateLoanPayload) =>
   axiosInstance.post("/loan-applications", data);

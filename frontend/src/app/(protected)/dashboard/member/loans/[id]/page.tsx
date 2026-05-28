@@ -14,6 +14,16 @@ import { useQuery } from "@tanstack/react-query";
 import { getLoan, downloadLoanDocumentUrl } from "@/lib/api/loan";
 import { useParams, useRouter } from "next/navigation";
 
+type ActivityLog = {
+  id: number | string;
+  notes?: string | null;
+};
+
+type LoanDocument = {
+  id: number | string;
+  document_type?: string | null;
+};
+
 const MemberLoanDetailsPage = () => {
   const params = useParams();
   const router = useRouter();
@@ -27,6 +37,7 @@ const MemberLoanDetailsPage = () => {
   });
 
   const loan = loanResponse?.data?.data;
+  const activityLogs: ActivityLog[] = loan?.activity_logs ?? [];
 if (!loan) {
   return (
     <Container maxWidth="md" sx={{ py: 6 }}>
@@ -70,8 +81,7 @@ if (!loan) {
   );
 }
 
-  const documents = loan?.documents ?? [];
-
+  const documents: LoanDocument[] = loan?.documents ?? [];
   return (
     <Container maxWidth="md" sx={{ py: 3 }}>
       <Typography variant="h4" fontWeight={700} gutterBottom>
@@ -192,7 +202,7 @@ if (!loan) {
             </Typography>
           ) : (
             <Stack spacing={2}>
-              {documents.map((document: any) => (
+              {documents.map((document) => (
                 <Box
                   key={document.id}
                   sx={{
@@ -214,7 +224,7 @@ if (!loan) {
                       textTransform: "none",
                       fontWeight: 600,
                     }}
-                    href={downloadLoanDocumentUrl(document.id)}
+                    href={downloadLoanDocumentUrl(Number(document.id))}
                     target="_blank"
                   >
                     Download Document
@@ -232,9 +242,9 @@ if (!loan) {
       Status History
     </Typography>
 
-    {loan.activity_logs?.length ? (
+    {activityLogs.length ? (
       <Stack spacing={2}>
-        {loan.activity_logs.map((log: any) => (
+        {activityLogs.map((log) => (
           <Box
             key={log.id}
             sx={{

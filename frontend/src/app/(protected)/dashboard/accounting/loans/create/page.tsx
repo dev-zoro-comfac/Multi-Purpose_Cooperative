@@ -19,7 +19,6 @@ import { useRouter } from "next/navigation";
 import { createLoan } from "@/lib/api/loan";
 import PersonIcon from "@mui/icons-material/Person";
 import WorkIcon from "@mui/icons-material/Work";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import { useAuthenticatedUser } from "@/features/auth/api/useAuthenticatedUser";
 
@@ -74,7 +73,13 @@ export default function CreateLoanPage() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
 
   useEffect(() => {
-    const member = (authUser as any)?.member;
+    const member = (
+      authUser as {
+        member?: {
+        id?: number | string;
+      };
+      } | null
+      )?.member;
 
     if (!member || form.member_id || members.length === 0) {
       return;
@@ -250,7 +255,11 @@ export default function CreateLoanPage() {
       showMessage("Loan application created successfully.");
 
       setTimeout(() => {
-  const roles = (authUser as any)?.roles ?? [];
+  const roles = (
+    authUser as {
+      roles?: string[];
+    } | null
+  )?.roles ?? [];
 
   if (
     roles.includes("member") ||
@@ -767,7 +776,11 @@ export default function CreateLoanPage() {
                 fontSize: "1rem",
               }}
               onClick={() => {
-  const roles = (authUser as any)?.roles ?? [];
+  const roles = (
+    authUser as {
+      roles?: string[];
+    } | null
+    )?.roles ?? [];
 
   if (
     roles.includes("member") ||

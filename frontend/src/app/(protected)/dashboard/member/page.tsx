@@ -54,23 +54,41 @@ const DashboardPage = () => {
   const totalLoans = loans.length;
 
   const pendingLoans = loans.filter(
-    (loan: any) =>
-      loan.status === "pending" ||
-      loan.status === "created" ||
-      loan.status === "submitted_for_evaluation"
-  ).length;
+  (
+    loan: {
+      status?: string | null;
+    }
+  ) =>
+    loan.status === "pending" ||
+    loan.status === "created" ||
+    loan.status === "submitted_for_evaluation"
+).length;
 
   const releasedLoans = loans.filter(
-    (loan: any) => loan.status === "released"
-  ).length;
+  (
+    loan: {
+      status?: string | null;
+    }
+  ) => loan.status === "released"
+).length;
 
-  const totalReleasedAmount = loans
-    .filter((loan: any) => loan.status === "released")
-    .reduce(
-      (sum: number, loan: any) =>
-        sum + Number(loan.amount_requested || 0),
-      0
-    );
+const totalReleasedAmount = loans
+  .filter(
+    (
+      loan: {
+        status?: string | null;
+      }
+    ) => loan.status === "released"
+  )
+  .reduce(
+    (
+      sum: number,
+      loan: {
+        amount_requested?: number | string | null;
+      }
+    ) => sum + Number(loan.amount_requested || 0),
+    0
+  );
 
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>

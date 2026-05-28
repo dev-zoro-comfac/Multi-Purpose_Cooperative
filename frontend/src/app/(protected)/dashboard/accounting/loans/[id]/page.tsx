@@ -348,37 +348,37 @@ const AccountingLoanDetailsPage = () => {
     Activity Logs
   </Typography>
 
-  {loan.activity_logs?.length ? (
-    <Stack spacing={2}>
-      {loan.activity_logs.map((log: any) => (
-        <Card
-          key={log.id}
-          variant="outlined"
-          sx={{
-            borderRadius: 3,
-          }}
-        >
-          <CardContent>
-            <Typography fontWeight={600}>
-              {log.notes || "No notes"}
-            </Typography>
+{loan.activity_logs?.length ? (
+  <Stack spacing={2}>
+    {loan.activity_logs.map((log) => (
+      <Card
+        key={log.id}
+        variant="outlined"
+        sx={{
+          borderRadius: 3,
+        }}
+      >
+        <CardContent>
+          <Typography fontWeight={600}>
+            {log.notes || "No notes"}
+          </Typography>
 
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ mt: 1 }}
-            >
-              Activity recorded in the system.
-            </Typography>
-          </CardContent>
-        </Card>
-      ))}
-    </Stack>
-  ) : (
-    <Typography color="text.secondary">
-      No activity logs yet.
-    </Typography>
-  )}
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mt: 1 }}
+          >
+            Activity recorded in the system.
+          </Typography>
+        </CardContent>
+      </Card>
+    ))}
+  </Stack>
+) : (
+  <Typography color="text.secondary">
+    No activity logs yet.
+  </Typography>
+)}
 </Box>
 
         </Stack>
@@ -926,7 +926,7 @@ const getStatusColor = (
 
   if (status === "approved") return "info";
 
-  if (status === "reviewed") return "primary" as any;
+  if (status === "reviewed") return "info";
 
   if (
     status === "submitted_for_evaluation" ||

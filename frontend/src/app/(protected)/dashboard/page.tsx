@@ -28,7 +28,11 @@ const DashboardPage = () => {
   const authUser = authResponse?.data;
 
   useEffect(() => {
-  const roles = (authUser as any)?.roles ?? [];
+  const roles = (
+  authUser as {
+    roles?: string[];
+  } | null
+)?.roles ?? [];
 
   if (
     roles.includes("member") ||
@@ -53,21 +57,39 @@ const loans =
 const totalLoans = loans.length;
 
 const pendingLoans = loans.filter(
-  (loan: any) =>
+  (
+  loan: {
+    status?: string | null;
+  }
+) =>
     loan.status === "pending" ||
     loan.status === "created" ||
     loan.status === "submitted_for_evaluation"
 ).length;
 
 const releasedLoans = loans.filter(
-  (loan: any) => loan.status === "released"
+  (
+  loan: {
+    status?: string | null;
+  }
+) => loan.status === "released"
 ).length;
 
 const totalReleasedAmount = loans
-  .filter((loan: any) => loan.status === "released")
+  .filter(
+    (
+      loan: {
+        status?: string | null;
+      }
+    ) => loan.status === "released"
+  )
   .reduce(
-    (sum: number, loan: any) =>
-      sum + Number(loan.amount_requested || 0),
+    (
+      sum: number,
+      loan: {
+        amount_requested?: number | string | null;
+      }
+    ) => sum + Number(loan.amount_requested || 0),
     0
   );
 
