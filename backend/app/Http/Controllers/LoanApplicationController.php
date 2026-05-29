@@ -14,18 +14,38 @@ use App\Http\Requests\UpdateLoanApplicationRequest;
 use App\Http\Resources\LoanApplicationResource;
 use App\Services\LoanCalculatorService;
 use App\Models\LoanAmortization;
+use App\Models\User;
+use App\Models\Profile;
+use App\Models\Member;
+use App\Enums\RoleEnum;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class LoanApplicationController extends Controller
 {
     public function index()
 {
+    $user = auth()->user();
+
+    $query = LoanApplication::with([
+        'documents',
+        'activityLogs',
+    ])->latest();
+
+    if (
+        $user &&
+        $user->hasRole('member') &&
+        ! $user->hasRole('admin') &&
+        ! $user->hasRole('accounting')
+    ) {
+        $query->where('borrower_email', $user->email);
+    }
+
     return response()->json([
         'success' => true,
-        'data' => LoanApplication::with([
-            'documents',
-            'activityLogs',
-        ])->latest()->get(),
+        'data' => $query->get(),
     ]);
+
 }
 
     public function calculate(Request $request, LoanCalculatorService $calculator)
@@ -48,6 +68,63 @@ class LoanApplicationController extends Controller
     LoanCalculatorService $calculatorService
 ) {
     $data = $request->validated();
+
+    if (
+    empty($data['member_id']) &&
+    ! empty($data['borrower_email'])
+) {
+   $generatedPassword = 'Comfac123';
+
+    $user = User::firstOrCreate(
+        [
+            'email' => $data['borrower_email'],
+        ],
+        [
+            'password' => Hash::make($generatedPassword),
+        ]
+    );
+
+    if (! $user->hasRole(RoleEnum::Member->value)) {
+        $user->assignRole(RoleEnum::Member->value);
+    }
+
+    $nameParts = collect(explode(' ', $data['borrower_name']))
+        ->filter()
+        ->values();
+
+    $firstName = $nameParts->first() ?: 'Member';
+    $lastName = $nameParts->count() > 1
+        ? $nameParts->last()
+        : 'Borrower';
+
+    if (! $user->profile) {
+        $user->profile()->save(Profile::factory()->make([
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'middle_name' => null,
+            'contact_number' => $data['borrower_contact_number'] ?? null,
+        ]));
+    }
+
+    $member = Member::firstOrCreate(
+    [
+        'user_id' => $user->id,
+    ],
+    [
+        'member_no' => 'MEM-' . str_pad((string) (Member::count() + 1), 6, '0', STR_PAD_LEFT),
+        'first_name' => $firstName,
+        'last_name' => $lastName,
+        'middle_name' => null,
+        'email' => $data['borrower_email'],
+        'contact_number' => $data['borrower_contact_number'] ?? null,
+        'address' => $data['borrower_address'] ?? null,
+        'status' => 'active',
+    ]
+);
+
+    $data['member_id'] = $member->id;
+    $data['is_coop_member'] = true;
+}
 
     $calculation = $calculatorService->calculate([
         'loan_amount' => $data['amount_requested'],

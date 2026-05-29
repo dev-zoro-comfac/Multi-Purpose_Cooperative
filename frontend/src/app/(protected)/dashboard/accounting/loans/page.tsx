@@ -590,10 +590,11 @@ const AccountingLoansPage = () => {
                     <Chip
                       label={formatStatus(loan.status)}
                       color={getStatusColor(loan.status)}
+                      size="small"
                       sx={{
                         fontWeight: 700,
                         borderRadius: 2,
-                        px: 1,
+                        minWidth: 120,
                       }}
                       />
 
@@ -824,7 +825,12 @@ const formatStatus = (status?: string | null) => {
     released: "Released",
   };
 
-  return labels[status] || status.replaceAll("_", " ");
+  return (
+  labels[status] ||
+  status
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+);
 };
 
 const getTimestamp = (value?: string | null) =>
@@ -833,20 +839,27 @@ const getTimestamp = (value?: string | null) =>
 const getStatusColor = (
   status?: string | null
 ): "success" | "error" | "warning" | "info" | "default" => {
-  if (status === "released") return "success";
-  if (status === "approved") return "info";
-  if (status === "rejected") return "error";
-  if (
-    status === "created" ||
-    status === "pending" ||
-    status === "documents_generated" ||
-    status === "documents_uploaded" ||
-    status === "submitted_for_evaluation"
-  ) {
-    return "warning";
-  }
+  switch (status) {
+    case "released":
+      return "success";
 
-  return "default";
+    case "approved":
+    case "reviewed":
+      return "info";
+
+    case "rejected":
+      return "error";
+
+    case "created":
+    case "pending":
+    case "documents_generated":
+    case "documents_uploaded":
+    case "submitted_for_evaluation":
+      return "warning";
+
+    default:
+      return "default";
+  }
 };
 
 const getErrorMessage = (error: unknown, fallback: string) => {

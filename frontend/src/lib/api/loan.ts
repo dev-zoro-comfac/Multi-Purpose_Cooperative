@@ -36,3 +36,24 @@ type CreateLoanPayload = Record<
 
 export const createLoan = (data: CreateLoanPayload) =>
   axiosInstance.post("/loan-applications", data);
+
+export const uploadLoanDocument = (
+  loanId: string | number,
+  data: FormData
+) =>
+  axiosInstance.post(
+    `/loan-applications/${loanId}/upload-document`,
+    data,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+export const submitLoanForEvaluation = (
+  loanId: string | number
+) =>
+  axiosInstance.patch(
+    `/loan-applications/${loanId}/submit-for-evaluation`
+  );

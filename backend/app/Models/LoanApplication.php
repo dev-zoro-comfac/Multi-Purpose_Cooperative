@@ -28,6 +28,7 @@ class LoanApplication extends Model
     'borrower_name',
     'borrower_address',
     'borrower_email',
+    'borrower_contact_number',
     'borrower_age',
     'borrower_civil_status',
     'borrower_employer',
@@ -47,6 +48,8 @@ class LoanApplication extends Model
     'member_since',
 
     'co_maker_name',
+    'co_maker_email',
+    'co_maker_contact_number',
     'co_maker_address',
     'co_maker_age',
     'co_maker_civil_status',

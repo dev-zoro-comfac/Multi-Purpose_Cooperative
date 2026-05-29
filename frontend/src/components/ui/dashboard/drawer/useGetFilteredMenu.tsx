@@ -40,12 +40,13 @@ export const useGetFilteredMenu = () => {
     return false;
   }
 
-  if (
-    child.id === "member-dashboard" &&
-    !userRoles.includes("member")
-  ) {
-    return false;
-  }
+ if (
+  (child.id === "member-dashboard" ||
+    child.id === "member-loans") &&
+  !userRoles.includes("member")
+) {
+  return false;
+}
 
   return hasPermission(
     child.requiredPermission,

@@ -3,7 +3,9 @@
 import { useEffect } from "react";
 import {
   Box,
+  Button,
   Card,
+  Chip,
   CardContent,
   Container,
   Grid,
@@ -119,7 +121,23 @@ const totalReleasedAmount = loans
           Monitor cooperative loan activity, borrower applications, and
           accounting workflow progress.
         </Typography>
+
+        <Button
+          variant="contained"
+          sx={{
+          mt: 3,
+          borderRadius: 2,
+          textTransform: "none",
+          fontWeight: 700,
+        }}
+          onClick={() => router.push("/dashboard/accounting/loans/create")}
+        >
+          Apply for New Loan
+      </Button>
+
       </Paper>
+
+      
 
       <Stack
         direction={{ xs: "column", md: "row" }}
@@ -134,6 +152,80 @@ const totalReleasedAmount = loans
           value={`₱${totalReleasedAmount.toLocaleString()}`}
         />
       </Stack>
+
+      <Box sx={{ mb: 3 }}>
+  <Typography variant="h4" fontWeight={700}>
+    My Applications
+  </Typography>
+
+  <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+    View your pending loans, computations, and application status.
+  </Typography>
+</Box>
+
+<Stack spacing={2} sx={{ mb: 4 }}>
+  {loans.length === 0 ? (
+    <Card elevation={1} sx={{ borderRadius: 3 }}>
+      <CardContent>
+        <Typography color="text.secondary">
+          No loan applications yet.
+        </Typography>
+      </CardContent>
+    </Card>
+  ) : (
+    loans.map((loan: {
+      id: number;
+      application_no?: string | null;
+      amount_requested?: string | number | null;
+      total_amount_payable?: string | number | null;
+      monthly_amortization?: string | number | null;
+      status?: string | null;
+    }) => (
+      <Card key={loan.id} elevation={2} sx={{ borderRadius: 3 }}>
+        <CardContent>
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            justifyContent="space-between"
+            spacing={2}
+          >
+            <Box>
+              <Typography variant="h6" fontWeight={700}>
+                {loan.application_no || `Loan #${loan.id}`}
+              </Typography>
+
+              <Typography color="text.secondary">
+                Amount Requested: ₱{Number(loan.amount_requested || 0).toLocaleString()}
+              </Typography>
+
+              <Typography color="text.secondary">
+                Total Payable: ₱{Number(loan.total_amount_payable || 0).toLocaleString()}
+              </Typography>
+
+              <Typography color="text.secondary">
+                Amortization: ₱{Number(loan.monthly_amortization || 0).toLocaleString()}
+              </Typography>
+
+              <Chip
+                label={formatStatus(loan.status)}
+                color={getStatusColor(loan.status)}
+                size="small"
+                sx={{ mt: 1, fontWeight: 700 }}
+              />
+            </Box>
+
+            <Button
+              variant="outlined"
+              onClick={() => router.push(`/dashboard/member/loans/${loan.id}`)}
+              sx={{ alignSelf: { xs: "stretch", md: "center" } }}
+            >
+              View Details
+            </Button>
+          </Stack>
+        </CardContent>
+      </Card>
+    ))
+  )}
+</Stack>
 
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" fontWeight={700}>
@@ -230,6 +322,23 @@ const DashboardStat = ({
       </CardContent>
     </Card>
   );
+};
+
+const formatStatus = (status?: string | null) => {
+  if (!status) return "Unknown";
+
+  return status
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const getStatusColor = (
+  status?: string | null
+): "success" | "error" | "warning" | "info" | "default" => {
+  if (status === "released") return "success";
+  if (status === "approved") return "info";
+  if (status === "rejected") return "error";
+  return "warning";
 };
 
 export default DashboardPage;

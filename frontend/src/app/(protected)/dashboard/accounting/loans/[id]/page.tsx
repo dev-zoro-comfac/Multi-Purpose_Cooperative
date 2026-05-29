@@ -76,6 +76,9 @@ type LoanApplication = {
   co_maker_contact_number?: string | null;
   co_maker_address?: string | null;
 
+  co_maker_employer?: string | null;
+  co_maker_length_of_service?: string | null;
+
   amount_requested?: string | number | null;
 
   loan_type?: string | null;
@@ -422,6 +425,11 @@ const AccountingLoanDetailsPage = () => {
             <Info label="Email" value={loan.co_maker_email} />
             <Info label="Contact Number" value={loan.co_maker_contact_number} />
             <Info label="Address" value={loan.co_maker_address} />
+            <Info label="Employer" value={loan.co_maker_employer} />
+            <Info
+              label="Length of Service"
+              value={loan.co_maker_length_of_service}
+            />
           </CardContent>
         </Card>
 

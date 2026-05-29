@@ -11,7 +11,12 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { getLoan, downloadLoanDocumentUrl } from "@/lib/api/loan";
+import {
+  getLoan,
+  downloadLoanDocumentUrl,
+  uploadLoanDocument,
+  submitLoanForEvaluation,
+} from "@/lib/api/loan";
 import { useParams, useRouter } from "next/navigation";
 
 type ActivityLog = {
@@ -82,6 +87,39 @@ if (!loan) {
 }
 
   const documents: LoanDocument[] = loan?.documents ?? [];
+
+const handleUpload = async (
+  documentType: string,
+  file: File
+) => {
+  const formData = new FormData();
+
+  formData.append("document_type", documentType);
+  formData.append("file", file);
+
+  try {
+    await uploadLoanDocument(loanId, formData);
+
+    window.location.reload();
+  } catch (error) {
+    console.error(error);
+    alert("Failed to upload document.");
+  }
+};
+
+const handleSubmitForEvaluation = async () => {
+  try {
+    await submitLoanForEvaluation(loanId);
+
+    window.location.reload();
+  } catch (error) {
+    console.error(error);
+    alert(
+      "Please upload all required signed documents first."
+    );
+  }
+};
+
   return (
     <Container maxWidth="md" sx={{ py: 3 }}>
       <Typography variant="h4" fontWeight={700} gutterBottom>
@@ -183,9 +221,107 @@ if (!loan) {
             </Box>
 
             <Box>
-              <Typography color="text.secondary">Purpose</Typography>
-              <Typography>{loan.purpose || "—"}</Typography>
-            </Box>
+  <Typography variant="h6" fontWeight={900}>
+    Borrower Information
+  </Typography>
+
+  <Stack spacing={1} sx={{ mt: 1 }}>
+    <Typography>
+      <b>Name:</b> {loan.borrower_name || "—"}
+    </Typography>
+
+    <Typography>
+      <b>Email:</b> {loan.borrower_email || "—"}
+    </Typography>
+
+    <Typography>
+      <b>Contact Number:</b> {loan.borrower_contact_number || "—"}
+    </Typography>
+
+    <Typography>
+      <b>Address:</b> {loan.borrower_address || "—"}
+    </Typography>
+
+    <Typography>
+      <b>Employer:</b> {loan.borrower_employer || "—"}
+    </Typography>
+
+    <Typography>
+      <b>Position:</b> {loan.borrower_position || "—"}
+    </Typography>
+
+    <Typography>
+      <b>Length of Service:</b> {loan.borrower_length_of_service || "—"}
+    </Typography>
+  </Stack>
+</Box>
+
+<Box>
+  <Typography variant="h6" fontWeight={700}>
+    Co-maker Information
+  </Typography>
+
+  <Stack spacing={1} sx={{ mt: 1 }}>
+    <Typography>
+      <b>Name:</b> {loan.co_maker_name || "—"}
+    </Typography>
+
+    <Typography>
+      <b>Email:</b> {loan.co_maker_email || "—"}
+    </Typography>
+
+    <Typography>
+      <b>Contact Number:</b> {loan.co_maker_contact_number || "—"}
+    </Typography>
+
+    <Typography>
+      <b>Address:</b> {loan.co_maker_address || "—"}
+    </Typography>
+
+    <Typography>
+      <b>Employer:</b> {loan.co_maker_employer || "—"}
+    </Typography>
+
+    <Typography>
+      <b>Length of Service:</b> {loan.co_maker_length_of_service || "—"}
+    </Typography>
+  </Stack>
+</Box>
+
+<Box>
+  <Typography variant="h6" fontWeight={900}>
+    Loan Information
+  </Typography>
+
+  <Stack spacing={1} sx={{ mt: 1 }}>
+    <Typography>
+      <b>Loan Type:</b> {formatStatus(loan.loan_type)}
+    </Typography>
+
+    <Typography>
+      <b>Payment Frequency:</b> {formatStatus(loan.payment_frequency)}
+    </Typography>
+
+    <Typography>
+      <b>Interest Rate:</b> {loan.annual_rate || 0}%
+    </Typography>
+
+    <Typography>
+      <b>Number of Paydays:</b> {loan.number_of_paydays || "—"}
+    </Typography>
+
+    <Typography>
+      <b>Processing Fee:</b> ₱
+      {Number(loan.processing_fee || 0).toLocaleString()}
+    </Typography>
+
+    <Typography>
+      <b>Net Proceeds:</b> ₱
+      {Number(loan.net_proceeds || 0).toLocaleString()}
+    </Typography>
+  </Stack>
+</Box>
+
           </Stack>
         </CardContent>
       </Card>
@@ -216,19 +352,39 @@ if (!loan) {
                     {formatStatus(document.document_type)}
                   </Typography>
 
-                  <Button
-                    variant="outlined"
-                    sx={{
-                      mt: 1,
-                      borderRadius: 2,
-                      textTransform: "none",
-                      fontWeight: 600,
-                    }}
-                    href={downloadLoanDocumentUrl(Number(document.id))}
-                    target="_blank"
-                  >
-                    Download Document
-                  </Button>
+                  <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+  <Button
+    variant="outlined"
+    href={downloadLoanDocumentUrl(Number(document.id))}
+    target="_blank"
+  >
+    Download
+  </Button>
+
+  <Button
+    component="label"
+    variant="contained"
+  >
+    Upload Signed PDF
+
+    <input
+      hidden
+      type="file"
+      accept="application/pdf"
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+
+        if (!file) return;
+
+        handleUpload(
+          String(document.document_type),
+          file
+        );
+      }}
+    />
+  </Button>
+</Stack>
+
                 </Box>
               ))}
             </Stack>
@@ -237,10 +393,23 @@ if (!loan) {
       </Card>
 
       <Card elevation={2} sx={{ borderRadius: 3, mt: 3 }}>
-  <CardContent sx={{ p: 3 }}>
-    <Typography variant="h5" fontWeight={700} gutterBottom>
-      Status History
-    </Typography>
+        <CardContent sx={{ p: 3 }}>
+          <Button
+            fullWidth
+            variant="contained"
+            size="large"
+            onClick={handleSubmitForEvaluation}
+          >
+            Submit For Evaluation
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card elevation={2} sx={{ borderRadius: 3, mt: 3 }}>
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h5" fontWeight={700} gutterBottom>
+            Status History
+          </Typography>
 
     {activityLogs.length ? (
       <Stack spacing={2}>

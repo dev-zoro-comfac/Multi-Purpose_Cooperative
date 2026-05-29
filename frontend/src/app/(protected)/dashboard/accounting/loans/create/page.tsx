@@ -36,6 +36,8 @@ const emptyForm = {
   last_name: "",
   suffix: "",
   address: "",
+  borrower_email: "",
+  borrower_contact_number: "",
   employer: "",
   position: "",
   length_of_service: "",
@@ -48,6 +50,15 @@ const emptyForm = {
   total_contribution: "",
   loan_balance: "",
   purpose: "",
+
+  co_maker_name: "",
+co_maker_email: "",
+co_maker_contact_number: "",
+co_maker_address: "",
+co_maker_employer: "",
+co_maker_length_of_service: "",
+
+
 };
 
 export default function CreateLoanPage() {
@@ -232,7 +243,10 @@ export default function CreateLoanPage() {
       .replace(/\s+/g, " ")
       .trim(),
 
-        borrower_email: authUser?.email,
+        borrower_email:
+          form.borrower_email || authUser?.email || "",
+        borrower_contact_number:
+          form.borrower_contact_number,
         borrower_address: form.address,
         borrower_employer: form.employer,
         borrower_position: form.position,
@@ -248,6 +262,13 @@ export default function CreateLoanPage() {
         total_contribution: Number(form.total_contribution || 0),
         outstanding_loan_balance: Number(form.loan_balance || 0),
         purpose: form.purpose,
+
+        co_maker_name: form.co_maker_name,
+        co_maker_email: form.co_maker_email,
+        co_maker_contact_number: form.co_maker_contact_number,
+        co_maker_address: form.co_maker_address,
+        co_maker_employer: form.co_maker_employer,
+        co_maker_length_of_service: form.co_maker_length_of_service,
 
         processing_fee: 50,
       });
@@ -361,6 +382,32 @@ export default function CreateLoanPage() {
             onChange={handleChange}
           />
 
+          <Box
+  sx={{
+    display: "grid",
+    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+    gap: 2,
+  }}
+>
+  <TextField
+    fullWidth
+    margin="normal"
+    label="Email Address"
+    name="borrower_email"
+    value={form.borrower_email}
+    onChange={handleChange}
+  />
+
+  <TextField
+    fullWidth
+    margin="normal"
+    label="Contact Number"
+    name="borrower_contact_number"
+    value={form.borrower_contact_number}
+    onChange={handleChange}
+  />
+</Box>
+
           <Box display="flex" alignItems="center" gap={1} mt={3} mb={1}>
             <WorkIcon color="primary" />
             <Typography variant="h6" fontWeight={700}>
@@ -401,15 +448,84 @@ export default function CreateLoanPage() {
               name="length_of_service"
               value={form.length_of_service}
               onChange={handleChange}
-            />
-          </Box>
+/>
+            </Box>
 
-          <Box display="flex" alignItems="center" gap={1} mt={3} mb={1}>
-            <AccountBalanceIcon color="primary" />
+            <Box display="flex" alignItems="center" gap={1} mt={3} mb={1}>
+            <PersonIcon color="primary" />
             <Typography variant="h6" fontWeight={700}>
-              Loan Information
-            </Typography>
-          </Box>
+            Co-maker Information
+  </Typography>
+</Box>
+
+        <Box
+           sx={{
+             display: "grid",
+             gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+             gap: 2,
+  }}
+>
+  <TextField
+    fullWidth
+    margin="normal"
+    label="Co-maker Name"
+    name="co_maker_name"
+    value={form.co_maker_name || ""}
+    onChange={handleChange}
+  />
+
+  <TextField
+    fullWidth
+    margin="normal"
+    label="Co-maker Email"
+    name="co_maker_email"
+    value={form.co_maker_email || ""}
+    onChange={handleChange}
+  />
+
+  <TextField
+    fullWidth
+    margin="normal"
+    label="Co-maker Contact Number"
+    name="co_maker_contact_number"
+    value={form.co_maker_contact_number || ""}
+    onChange={handleChange}
+  />
+
+  <TextField
+    fullWidth
+    margin="normal"
+    label="Co-maker Address"
+    name="co_maker_address"
+    value={form.co_maker_address || ""}
+    onChange={handleChange}
+  />
+
+  <TextField
+    fullWidth
+    margin="normal"
+    label="Co-maker Employer"
+    name="co_maker_employer"
+    value={form.co_maker_employer || ""}
+    onChange={handleChange}
+  />
+
+  <TextField
+    fullWidth
+    margin="normal"
+    label="Co-maker Length of Service"
+    name="co_maker_length_of_service"
+    value={form.co_maker_length_of_service || ""}
+    onChange={handleChange}
+  />
+</Box>
+
+<Box display="flex" alignItems="center" gap={1} mt={3} mb={1}>
+  <AccountBalanceIcon color="primary" />
+  <Typography variant="h6" fontWeight={700}>
+    Loan Information
+  </Typography>
+</Box>
 
           <TextField
             select

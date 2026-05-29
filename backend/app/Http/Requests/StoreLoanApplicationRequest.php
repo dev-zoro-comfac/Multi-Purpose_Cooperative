@@ -16,6 +16,7 @@ class StoreLoanApplicationRequest extends FormRequest
         return [
         'borrower_name' => ['required', 'string', 'max:255'],
         'borrower_email' => ['nullable', 'email', 'max:255'],
+        'borrower_contact_number' => ['nullable', 'string', 'max:50'],
         'borrower_address' => ['nullable', 'string', 'max:255'],
         'borrower_age' => ['nullable', 'integer', 'min:18'],
         'borrower_civil_status' => ['nullable', 'string', 'max:50'],
@@ -43,6 +44,8 @@ class StoreLoanApplicationRequest extends FormRequest
         'member_since' => ['nullable', 'date'],
 
         'co_maker_name' => ['nullable', 'string', 'max:255'],
+        'co_maker_email' => ['nullable', 'email', 'max:255'],
+        'co_maker_contact_number' => ['nullable', 'string', 'max:50'],
         'co_maker_address' => ['nullable', 'string', 'max:255'],
         'co_maker_age' => ['nullable', 'integer', 'min:18'],
         'co_maker_civil_status' => ['nullable', 'string', 'max:50'],
