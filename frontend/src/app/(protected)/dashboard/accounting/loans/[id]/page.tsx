@@ -309,37 +309,82 @@ const AccountingLoanDetailsPage = () => {
   </Typography>
 
   <Stack direction="row" spacing={1} flexWrap="wrap">
-    <Chip
-      label="Submitted"
-      color="info"
-      variant="outlined"
-    />
+  <Chip
+    label="Documents Generated"
+    color={
+      [
+        "documents_generated",
+        "documents_uploaded",
+        "submitted_for_evaluation",
+        "reviewed",
+        "approved",
+        "released",
+      ].includes(String(loan.status))
+        ? "success"
+        : "default"
+    }
+  />
 
-    {(loan.status === "approved" ||
-      loan.status === "released") && (
-      <Chip
-        label="Approved"
-        color="success"
-        variant="outlined"
-      />
-    )}
+  <Chip
+    label="Documents Uploaded"
+    color={
+      [
+        "documents_uploaded",
+        "submitted_for_evaluation",
+        "reviewed",
+        "approved",
+        "released",
+      ].includes(String(loan.status))
+        ? "success"
+        : "default"
+    }
+  />
 
-    {loan.status === "rejected" && (
-      <Chip
-        label="Rejected"
-        color="error"
-        variant="outlined"
-      />
-    )}
+  <Chip
+    label="For Evaluation"
+    color={
+      [
+        "submitted_for_evaluation",
+        "reviewed",
+        "approved",
+        "released",
+      ].includes(String(loan.status))
+        ? "success"
+        : "default"
+    }
+  />
 
-    {loan.status === "released" && (
-      <Chip
-        label="Released"
-        color="primary"
-        variant="outlined"
-      />
-    )}
-  </Stack>
+  <Chip
+    label="Reviewed"
+    color={
+      ["reviewed", "approved", "released"].includes(
+        String(loan.status)
+      )
+        ? "success"
+        : "default"
+    }
+  />
+
+  <Chip
+    label="Approved"
+    color={
+      ["approved", "released"].includes(
+        String(loan.status)
+      )
+        ? "success"
+        : "default"
+    }
+  />
+
+  <Chip
+    label="Released"
+    color={
+      loan.status === "released"
+        ? "success"
+        : "default"
+    }
+  />
+</Stack>
 </Box>
 
 <Box sx={{ mt: 4 }}>

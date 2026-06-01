@@ -392,18 +392,20 @@ const handleSubmitForEvaluation = async () => {
         </CardContent>
       </Card>
 
-      <Card elevation={2} sx={{ borderRadius: 3, mt: 3 }}>
-        <CardContent sx={{ p: 3 }}>
-          <Button
-            fullWidth
-            variant="contained"
-            size="large"
-            onClick={handleSubmitForEvaluation}
-          >
-            Submit For Evaluation
-          </Button>
-        </CardContent>
-      </Card>
+      {["documents_generated", "documents_uploaded"].includes(loan.status) && (
+  <Card elevation={2} sx={{ borderRadius: 3, mt: 3 }}>
+    <CardContent sx={{ p: 3 }}>
+      <Button
+        fullWidth
+        variant="contained"
+        size="large"
+        onClick={handleSubmitForEvaluation}
+      >
+        Submit For Evaluation
+      </Button>
+    </CardContent>
+  </Card>
+)}
 
       <Card elevation={2} sx={{ borderRadius: 3, mt: 3 }}>
         <CardContent sx={{ p: 3 }}>

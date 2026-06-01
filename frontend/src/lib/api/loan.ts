@@ -9,6 +9,11 @@ export const getLoan = (id: string | number) =>
 export const approveLoan = (id: number) =>
   axiosInstance.patch(`/loan-applications/${id}/approve`);
 
+export const reviewLoan = (id: number) =>
+  axiosInstance.patch(
+    `/loan-applications/${id}/review`
+  );
+
 export const releaseLoan = (id: number) =>
   axiosInstance.patch(`/loan-applications/${id}/release`);
 

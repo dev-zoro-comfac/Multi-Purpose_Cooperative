@@ -74,6 +74,32 @@ const DashboardPage = () => {
   ) => loan.status === "released"
 ).length;
 
+const approvedLoans = loans.filter(
+  (
+    loan: {
+      status?: string | null;
+    }
+  ) => loan.status === "approved"
+).length;
+
+const rejectedLoans = loans.filter(
+  (
+    loan: {
+      status?: string | null;
+    }
+  ) => loan.status === "rejected"
+).length;
+
+const totalBorrowedAmount = loans.reduce(
+  (
+    sum: number,
+    loan: {
+      amount_requested?: number | string | null;
+    }
+  ) => sum + Number(loan.amount_requested || 0),
+  0
+);
+
 const totalReleasedAmount = loans
   .filter(
     (
@@ -137,21 +163,21 @@ const totalReleasedAmount = loans
 
       </Paper>
 
-      
+      <DashboardStat title="Total Loans" value={totalLoans} />
+      <DashboardStat title="Pending Loans" value={pendingLoans} />
+      <DashboardStat title="Released Loans" value={releasedLoans} />
+      <DashboardStat title="Approved Loans" value={approvedLoans} />
+      <DashboardStat title="Rejected Loans" value={rejectedLoans} />
 
-      <Stack
-        direction={{ xs: "column", md: "row" }}
-        spacing={2}
-        sx={{ mb: 4 }}
-      >
-        <DashboardStat title="Total Loans" value={totalLoans} />
-        <DashboardStat title="Pending Loans" value={pendingLoans} />
-        <DashboardStat title="Released Loans" value={releasedLoans} />
-        <DashboardStat
-          title="Released Amount"
-          value={`₱${totalReleasedAmount.toLocaleString()}`}
-        />
-      </Stack>
+      <DashboardStat
+        title="Total Borrowed"
+        value={`₱${totalBorrowedAmount.toLocaleString()}`}
+      />
+
+      <DashboardStat
+        title="Released Amount"
+        value={`₱${totalReleasedAmount.toLocaleString()}`}
+      />
 
       <Box sx={{ mb: 3 }}>
   <Typography variant="h4" fontWeight={700}>
@@ -184,9 +210,10 @@ const totalReleasedAmount = loans
       <Card key={loan.id} elevation={2} sx={{ borderRadius: 3 }}>
         <CardContent>
           <Stack
-            direction={{ xs: "column", md: "row" }}
-            justifyContent="space-between"
+            direction="row"
             spacing={2}
+            flexWrap="wrap"
+            sx={{ mb: 4 }}
           >
             <Box>
               <Typography variant="h6" fontWeight={700}>
@@ -310,7 +337,13 @@ const DashboardStat = ({
   value: string | number;
 }) => {
   return (
-    <Card elevation={2} sx={{ flex: 1, borderRadius: 3 }}>
+    <Card
+      elevation={2}
+      sx={{
+        flex: "1 1 220px",
+        borderRadius: 3,
+      }}
+      >
       <CardContent sx={{ p: 3 }}>
         <Typography color="text.secondary" fontWeight={600}>
           {title}
@@ -327,9 +360,25 @@ const DashboardStat = ({
 const formatStatus = (status?: string | null) => {
   if (!status) return "Unknown";
 
-  return status
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+  const labels: Record<string, string> = {
+    draft: "Draft",
+    created: "Created",
+    pending: "Pending Review",
+    documents_generated: "Documents Generated",
+    documents_uploaded: "Documents Uploaded",
+    submitted_for_evaluation: "For Evaluation",
+    reviewed: "Reviewed",
+    approved: "Approved",
+    rejected: "Rejected",
+    released: "Released",
+  };
+
+  return (
+    labels[status] ||
+    status
+      .replaceAll("_", " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+  );
 };
 
 const getStatusColor = (
