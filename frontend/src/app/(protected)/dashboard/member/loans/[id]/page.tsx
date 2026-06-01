@@ -424,8 +424,8 @@ const handleSubmitForEvaluation = async () => {
             }}
           >
             <Typography fontWeight={700}>
-              {log.notes || "Loan activity updated."}
-            </Typography>
+                {log.notes || "Loan activity updated."}
+              </Typography>
           </Box>
         ))}
       </Stack>
