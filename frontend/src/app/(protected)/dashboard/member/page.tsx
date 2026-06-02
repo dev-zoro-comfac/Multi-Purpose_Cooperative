@@ -5,8 +5,8 @@ import {
   Box,
   Button,
   Card,
-  Chip,
   CardContent,
+  Chip,
   Container,
   Grid,
   Link as MuiLink,
@@ -37,18 +37,12 @@ const DashboardPage = () => {
     queryFn: getLoans,
   });
 
-  const loans =
-    loansResponse?.data?.data ??
-    loansResponse?.data ??
-    [];
+  const loans = loansResponse?.data?.data ?? loansResponse?.data ?? [];
 
   useEffect(() => {
     const roles = authUser?.roles ?? [];
 
-    if (
-      roles.includes("member") ||
-      roles.includes("non_member")
-    ) {
+    if (roles.includes("member") || roles.includes("non_member")) {
       router.replace("/dashboard/member");
     }
   }, [authUser, router]);
@@ -56,59 +50,25 @@ const DashboardPage = () => {
   const totalLoans = loans.length;
 
   const pendingLoans = loans.filter(
-  (
-    loan: {
-      status?: string | null;
-    }
-  ) =>
-    loan.status === "pending" ||
-    loan.status === "created" ||
-    loan.status === "submitted_for_evaluation"
-).length;
+    (loan: { status?: string | null }) =>
+      loan.status === "pending" ||
+      loan.status === "created" ||
+      loan.status === "submitted_for_evaluation"
+  ).length;
 
   const releasedLoans = loans.filter(
-  (
-    loan: {
-      status?: string | null;
-    }
-  ) => loan.status === "released"
-).length;
+    (loan: { status?: string | null }) => loan.status === "released"
+  ).length;
 
-const approvedLoans = loans.filter(
-  (
-    loan: {
-      status?: string | null;
-    }
-  ) => loan.status === "approved"
-).length;
+  const approvedLoans = loans.filter(
+    (loan: { status?: string | null }) => loan.status === "approved"
+  ).length;
 
-const rejectedLoans = loans.filter(
-  (
-    loan: {
-      status?: string | null;
-    }
-  ) => loan.status === "rejected"
-).length;
+  const rejectedLoans = loans.filter(
+    (loan: { status?: string | null }) => loan.status === "rejected"
+  ).length;
 
-const totalBorrowedAmount = loans.reduce(
-  (
-    sum: number,
-    loan: {
-      amount_requested?: number | string | null;
-    }
-  ) => sum + Number(loan.amount_requested || 0),
-  0
-);
-
-const totalReleasedAmount = loans
-  .filter(
-    (
-      loan: {
-        status?: string | null;
-      }
-    ) => loan.status === "released"
-  )
-  .reduce(
+  const totalBorrowedAmount = loans.reduce(
     (
       sum: number,
       loan: {
@@ -118,6 +78,18 @@ const totalReleasedAmount = loans
     0
   );
 
+  const totalReleasedAmount = loans
+    .filter((loan: { status?: string | null }) => loan.status === "released")
+    .reduce(
+      (
+        sum: number,
+        loan: {
+          amount_requested?: number | string | null;
+        }
+      ) => sum + Number(loan.amount_requested || 0),
+      0
+    );
+
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
       <Paper
@@ -126,8 +98,7 @@ const totalReleasedAmount = loans
           p: { xs: 3, md: 4 },
           mb: 4,
           borderRadius: 4,
-          background:
-            "linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%)",
+          background: "linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%)",
         }}
       >
         <Typography variant="h3" fontWeight={700}>
@@ -151,108 +122,134 @@ const totalReleasedAmount = loans
         <Button
           variant="contained"
           sx={{
-          mt: 3,
-          borderRadius: 2,
-          textTransform: "none",
-          fontWeight: 700,
-        }}
+            mt: 3,
+            borderRadius: 2,
+            textTransform: "none",
+            fontWeight: 700,
+          }}
           onClick={() => router.push("/dashboard/accounting/loans/create")}
         >
           Apply for New Loan
-      </Button>
-
+        </Button>
       </Paper>
 
-      <DashboardStat title="Total Loans" value={totalLoans} />
-      <DashboardStat title="Pending Loans" value={pendingLoans} />
-      <DashboardStat title="Released Loans" value={releasedLoans} />
-      <DashboardStat title="Approved Loans" value={approvedLoans} />
-      <DashboardStat title="Rejected Loans" value={rejectedLoans} />
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardStat title="Total Loans" value={totalLoans} />
+        </Grid>
 
-      <DashboardStat
-        title="Total Borrowed"
-        value={`₱${totalBorrowedAmount.toLocaleString()}`}
-      />
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardStat title="Pending Loans" value={pendingLoans} />
+        </Grid>
 
-      <DashboardStat
-        title="Released Amount"
-        value={`₱${totalReleasedAmount.toLocaleString()}`}
-      />
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardStat title="Released Loans" value={releasedLoans} />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardStat title="Approved Loans" value={approvedLoans} />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardStat title="Rejected Loans" value={rejectedLoans} />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardStat
+            title="Total Borrowed"
+            value={`₱${totalBorrowedAmount.toLocaleString()}`}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardStat
+            title="Released Amount"
+            value={`₱${totalReleasedAmount.toLocaleString()}`}
+          />
+        </Grid>
+      </Grid>
+
 
       <Box sx={{ mb: 3 }}>
-  <Typography variant="h4" fontWeight={700}>
-    My Applications
-  </Typography>
-
-  <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-    View your pending loans, computations, and application status.
-  </Typography>
-</Box>
-
-<Stack spacing={2} sx={{ mb: 4 }}>
-  {loans.length === 0 ? (
-    <Card elevation={1} sx={{ borderRadius: 3 }}>
-      <CardContent>
-        <Typography color="text.secondary">
-          No loan applications yet.
+        <Typography variant="h4" fontWeight={700}>
+          My Applications
         </Typography>
-      </CardContent>
-    </Card>
-  ) : (
-    loans.map((loan: {
-      id: number;
-      application_no?: string | null;
-      amount_requested?: string | number | null;
-      total_amount_payable?: string | number | null;
-      monthly_amortization?: string | number | null;
-      status?: string | null;
-    }) => (
-      <Card key={loan.id} elevation={2} sx={{ borderRadius: 3 }}>
-        <CardContent>
-          <Stack
-            direction="row"
-            spacing={2}
-            flexWrap="wrap"
-            sx={{ mb: 4 }}
-          >
-            <Box>
-              <Typography variant="h6" fontWeight={700}>
-                {loan.application_no || `Loan #${loan.id}`}
-              </Typography>
 
+        <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+          View your pending loans, computations, and application status.
+        </Typography>
+      </Box>
+
+      <Stack spacing={2} sx={{ mb: 4 }}>
+        {loans.length === 0 ? (
+          <Card elevation={1} sx={{ borderRadius: 3 }}>
+            <CardContent>
               <Typography color="text.secondary">
-                Amount Requested: ₱{Number(loan.amount_requested || 0).toLocaleString()}
+                No loan applications yet.
               </Typography>
+            </CardContent>
+          </Card>
+        ) : (
+          loans.map(
+            (loan: {
+              id: number;
+              application_no?: string | null;
+              amount_requested?: string | number | null;
+              total_amount_payable?: string | number | null;
+              monthly_amortization?: string | number | null;
+              status?: string | null;
+            }) => (
+              <Card key={loan.id} elevation={2} sx={{ borderRadius: 3 }}>
+                <CardContent>
+                  <Stack
+                    direction={{ xs: "column", md: "row" }}
+                    justifyContent="space-between"
+                    spacing={2}
+                  >
+                    <Box>
+                      <Typography variant="h6" fontWeight={700}>
+                        {loan.application_no || `Loan #${loan.id}`}
+                      </Typography>
 
-              <Typography color="text.secondary">
-                Total Payable: ₱{Number(loan.total_amount_payable || 0).toLocaleString()}
-              </Typography>
+                      <Typography color="text.secondary">
+                        Amount Requested: ₱
+                        {Number(loan.amount_requested || 0).toLocaleString()}
+                      </Typography>
 
-              <Typography color="text.secondary">
-                Amortization: ₱{Number(loan.monthly_amortization || 0).toLocaleString()}
-              </Typography>
+                      <Typography color="text.secondary">
+                        Total Payable: ₱
+                        {Number(loan.total_amount_payable || 0).toLocaleString()}
+                      </Typography>
 
-              <Chip
-                label={formatStatus(loan.status)}
-                color={getStatusColor(loan.status)}
-                size="small"
-                sx={{ mt: 1, fontWeight: 700 }}
-              />
-            </Box>
+                      <Typography color="text.secondary">
+                        Amortization: ₱
+                        {Number(loan.monthly_amortization || 0).toLocaleString()}
+                      </Typography>
 
-            <Button
-              variant="outlined"
-              onClick={() => router.push(`/dashboard/member/loans/${loan.id}`)}
-              sx={{ alignSelf: { xs: "stretch", md: "center" } }}
-            >
-              View Details
-            </Button>
-          </Stack>
-        </CardContent>
-      </Card>
-    ))
-  )}
-</Stack>
+                      <Chip
+                        label={formatStatus(loan.status)}
+                        color={getStatusColor(loan.status)}
+                        size="small"
+                        sx={{ mt: 1, fontWeight: 700 }}
+                      />
+                    </Box>
+
+                    <Button
+                      variant="outlined"
+                      onClick={() =>
+                        router.push(`/dashboard/member/loans/${loan.id}`)
+                      }
+                      sx={{ alignSelf: { xs: "stretch", md: "center" } }}
+                    >
+                      View Details
+                    </Button>
+                  </Stack>
+                </CardContent>
+              </Card>
+            )
+          )
+        )}
+      </Stack>
 
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" fontWeight={700}>
@@ -337,13 +334,7 @@ const DashboardStat = ({
   value: string | number;
 }) => {
   return (
-    <Card
-      elevation={2}
-      sx={{
-        flex: "1 1 220px",
-        borderRadius: 3,
-      }}
-      >
+    <Card elevation={2} sx={{ height: "100%", borderRadius: 3 }}>
       <CardContent sx={{ p: 3 }}>
         <Typography color="text.secondary" fontWeight={600}>
           {title}

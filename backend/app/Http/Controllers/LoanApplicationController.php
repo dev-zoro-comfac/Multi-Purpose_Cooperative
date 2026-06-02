@@ -243,6 +243,10 @@ public function downloadPdf(
    public function generateDocuments(
     LoanApplication $loanApplication
 ) {
+    $loanApplication->load([
+        'documents',
+        'amortizations',
+    ]);
     $documents = [
         [
             'type' => 'loan_application_form',
