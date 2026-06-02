@@ -23,11 +23,8 @@ export default function LoanDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
 
  useEffect(() => {
-  console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
-
   api.get("/loan-applications-dashboard")
     .then(response => {
-      console.log(response.data);
       setStats(response.data.data);
     })
     .catch(error => {

@@ -2,8 +2,8 @@
 
 namespace App\Rules;
 
-use Closure;
 use App\Models\User;
+use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
 class UserHasRole implements ValidationRule
@@ -12,8 +12,6 @@ class UserHasRole implements ValidationRule
 
     /**
      * Accepts either a string or an array of roles.
-     *
-     * @param  string|array  $roles
      */
     public function __construct(string|array $roles)
     {
@@ -27,17 +25,18 @@ class UserHasRole implements ValidationRule
     {
         $user = User::find($value);
 
-        if (!$user || $user == null) {
-            $fail("The selected user does not exist.");
+        if (! $user || $user == null) {
+            $fail('The selected user does not exist.');
+
             return;
         }
 
-        if ($user->hasRole('super-admin')) {
+        if ($user->hasRole('admin')) {
             return;
         }
 
-        if (!$user || !$user->hasAnyRole($this->requiredRoles)) {
-            $fail("The selected user must have one of the following roles: " . implode(', ', $this->requiredRoles) . ".");
+        if (! $user || ! $user->hasAnyRole($this->requiredRoles)) {
+            $fail('The selected user must have one of the following roles: '.implode(', ', $this->requiredRoles).'.');
         }
     }
 }

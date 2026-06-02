@@ -14,9 +14,17 @@ type useLoginParamsType = {
   password: string;
 };
 
+const getBackendOrigin = () => {
+  const apiUrl =
+    process.env.NEXT_PUBLIC_BACKEND_API_URL ||
+    "http://localhost:8000/api/v1";
+
+  return new URL(apiUrl).origin;
+};
+
 const useLogin = async ({ email, password }: useLoginParamsType) => {
   await axiosInstance.get("/sanctum/csrf-cookie", {
-    baseURL: "http://127.0.0.1:8000",
+    baseURL: getBackendOrigin(),
   });
 
   const response = await axiosInstance.post("auth/spa/login", {

@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use Carbon\Carbon;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,8 +17,8 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes, HasUlids, HasRoles, HasApiTokens;
+    /** @use HasFactory<UserFactory> */
+    use HasApiTokens, HasFactory, HasRoles, HasUlids, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -63,28 +64,28 @@ class User extends Authenticatable
     protected function createdAt(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $value ? Carbon::parse($value)->format('M j, Y, g:i a') : null
+            get: fn ($value) => $value ? Carbon::parse($value)->format('M j, Y, g:i a') : null
         );
     }
 
     protected function updatedAt(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $value ? Carbon::parse($value)->diffForHumans() : null
+            get: fn ($value) => $value ? Carbon::parse($value)->diffForHumans() : null
         );
     }
 
     protected function passwordChangedAt(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $value ? Carbon::parse($value)->diffForHumans() : null
+            get: fn ($value) => $value ? Carbon::parse($value)->diffForHumans() : null
         );
     }
 
     protected function deletedAt(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $value ? Carbon::parse($value)->format('M j, Y, g:i a') : null
+            get: fn ($value) => $value ? Carbon::parse($value)->format('M j, Y, g:i a') : null
         );
     }
 }

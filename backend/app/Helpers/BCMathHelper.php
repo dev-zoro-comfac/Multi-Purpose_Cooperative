@@ -26,8 +26,7 @@ class BCMathHelper
         return $result;
     }
 
-
-    public static function bcadd_arr(array $numbers,  ?int $scale = null): string
+    public static function bcadd_arr(array $numbers, ?int $scale = null): string
     {
         ArrayHelper::validateNotEmptyArray($numbers);
 

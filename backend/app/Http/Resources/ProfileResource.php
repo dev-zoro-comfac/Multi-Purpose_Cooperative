@@ -3,8 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Enums\Permissions\UserPermissionEnum;
-use App\Helpers\AuthHelper;
-use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;

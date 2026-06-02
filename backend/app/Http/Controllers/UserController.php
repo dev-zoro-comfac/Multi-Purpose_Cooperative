@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Enums\Permissions\UserPermissionEnum;
 use App\Http\Requests\User\ImportUserRequest;
-use App\Services\UserService;
-use App\Http\Requests\User\UpdateUserRequest;
-use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\ListUsersRequest;
+use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserPasswordRequest;
+use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Requests\User\UpdateUserRoleRequest;
 use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
@@ -63,7 +63,7 @@ class UserController extends Controller implements HasMiddleware
             [
                 'success' => true,
                 'message' => 'Users fetched successfully',
-                'data' => $users
+                'data' => $users,
             ],
             200
         );
@@ -77,7 +77,7 @@ class UserController extends Controller implements HasMiddleware
             [
                 'success' => true,
                 'message' => 'Users fetched successfully',
-                'data' => $users
+                'data' => $users,
             ],
             200
         );
@@ -185,7 +185,7 @@ class UserController extends Controller implements HasMiddleware
 
         return response()->json([
             'success' => true,
-            'message' => 'Import started. You will be notified when the file is finished processing.'
+            'message' => 'Import started. You will be notified when the file is finished processing.',
         ], 200);
     }
 
@@ -197,7 +197,7 @@ class UserController extends Controller implements HasMiddleware
 
         return response()->json([
             'success' => true,
-            'message' => 'Export started. You will be notified when the file is ready to download.'
+            'message' => 'Export started. You will be notified when the file is ready to download.',
         ], 200);
     }
 

@@ -13,11 +13,11 @@ class LoanCalculatorService
 
         $paymentFrequency = $data['payment_frequency'] ?? 'semi_monthly';
 
-            $periodsPerYear = match ($paymentFrequency) {
-                'monthly' => 12,
-                'weekly' => 52,
-                default => 24,
-}           ;
+        $periodsPerYear = match ($paymentFrequency) {
+            'monthly' => 12,
+            'weekly' => 52,
+            default => 24,
+        };
 
         $periodicRate = ($annualRate / 100) / $periodsPerYear;
 

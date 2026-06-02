@@ -24,6 +24,7 @@ import { useAuthenticatedUser } from "@/features/auth/api/useAuthenticatedUser";
 
 type Member = {
   id: number;
+  user_id?: string | null;
   member_no: string;
   first_name: string;
   middle_name?: string;
@@ -49,8 +50,7 @@ const emptyForm = {
   share_capital: "0",
   total_contribution: "0",
   status: "active",
-  create_account: "false",
-  password: "password123",
+  create_account: "true",
 };
 
 export default function MembersPage() {
@@ -61,8 +61,22 @@ export default function MembersPage() {
   const [search, setSearch] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] =
+    useState<"success" | "error">("success");
+  const [sendingSetupMemberId, setSendingSetupMemberId] = useState<
+    number | null
+  >(null);
   const { data: authResponse } = useAuthenticatedUser();
 const authUser = authResponse?.data;
+
+  const showSnackbar = (
+    message: string,
+    severity: "success" | "error" = "success"
+  ) => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
 
   const loadMembers = async () => {
     const response = await axiosInstance.get("/members");
@@ -109,20 +123,22 @@ const authUser = authResponse?.data;
 
   const handleSubmit = async () => {
     if (!form.member_no.trim()) {
-      setSnackbarMessage("Member number is required.");
-      setSnackbarOpen(true);
+      showSnackbar("Member number is required.", "error");
       return;
     }
 
     if (!form.first_name.trim()) {
-      setSnackbarMessage("First name is required.");
-      setSnackbarOpen(true);
+      showSnackbar("First name is required.", "error");
       return;
     }
 
     if (!form.last_name.trim()) {
-      setSnackbarMessage("Last name is required.");
-      setSnackbarOpen(true);
+      showSnackbar("Last name is required.", "error");
+      return;
+    }
+
+    if (form.create_account === "true" && !form.email.trim()) {
+      showSnackbar("Email is required when creating a login account.", "error");
       return;
     }
 
@@ -130,35 +146,24 @@ const authUser = authResponse?.data;
 
     try {
       await axiosInstance.post("/members", {
-  ...form,
-
-  create_account:
-    form.create_account === "true",
-
-  password:
-    form.create_account === "true"
-      ? form.password
-      : undefined,
-
-  share_capital: Number(
-    form.share_capital || 0
-  ),
-
-  total_contribution: Number(
-    form.total_contribution || 0
-  ),
-});
+        ...form,
+        create_account: form.create_account === "true",
+        share_capital: Number(form.share_capital || 0),
+        total_contribution: Number(form.total_contribution || 0),
+      });
 
       setOpen(false);
       setForm(emptyForm);
       await loadMembers();
 
-      setSnackbarMessage("Member added successfully.");
-      setSnackbarOpen(true);
+      showSnackbar(
+        form.create_account === "true"
+          ? "Member added and password setup link sent."
+          : "Member added successfully."
+      );
     } catch (error) {
       console.error(error);
-      setSnackbarMessage("Failed to save member.");
-      setSnackbarOpen(true);
+      showSnackbar("Failed to save member.", "error");
     } finally {
       setLoading(false);
     }
@@ -167,6 +172,34 @@ const authUser = authResponse?.data;
   const openAddDialog = () => {
     setForm(emptyForm);
     setOpen(true);
+  };
+
+  const handleSendPasswordSetup = async (member: Member) => {
+    if (!member.email) {
+      showSnackbar("This member does not have an email address.", "error");
+      return;
+    }
+
+    setSendingSetupMemberId(member.id);
+
+    try {
+      const response = await axiosInstance.post(
+        `/members/${member.id}/send-password-setup`
+      );
+
+      showSnackbar(
+        response.data?.message || "Password setup link sent successfully."
+      );
+    } catch (error) {
+      showSnackbar(
+        error instanceof Error
+          ? error.message
+          : "Failed to send password setup link.",
+        "error"
+      );
+    } finally {
+      setSendingSetupMemberId(null);
+    }
   };
 
   if (
@@ -324,6 +357,16 @@ const authUser = authResponse?.data;
                       }}
                     />
 
+                    <Chip
+                      label={member.user_id ? "Login account" : "No login account"}
+                      color={member.user_id ? "primary" : "default"}
+                      variant="outlined"
+                      sx={{
+                        fontWeight: 700,
+                        borderRadius: 2,
+                      }}
+                    />
+
                     <Typography>
                       Share Capital:{" "}
                       <b>{formatMoney(member.share_capital)}</b>
@@ -333,6 +376,28 @@ const authUser = authResponse?.data;
                       Contribution:{" "}
                       <b>{formatMoney(member.total_contribution)}</b>
                     </Typography>
+
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      disabled={
+                        !member.email ||
+                        !member.user_id ||
+                        sendingSetupMemberId === member.id
+                      }
+                      onClick={() => handleSendPasswordSetup(member)}
+                      sx={{
+                        borderRadius: 2,
+                        textTransform: "none",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {!member.user_id
+                        ? "No login account"
+                        : sendingSetupMemberId === member.id
+                          ? "Sending..."
+                          : "Send setup link"}
+                    </Button>
                   </Stack>
                 </Stack>
               </CardContent>
@@ -456,30 +521,22 @@ const authUser = authResponse?.data;
             />
 
             <TextField
-            select
-  label="Create Login Account?"
-  value={form.create_account}
-  onChange={(e) =>
-    handleChange("create_account", e.target.value)
-  }
-  fullWidth
->
-  <MenuItem value="false">No</MenuItem>
-  <MenuItem value="true">Yes</MenuItem>
-</TextField>
-
-{form.create_account === "true" && (
-  <TextField
-    label="Default Password"
-    type="text"
-    value={form.password}
-    onChange={(e) =>
-      handleChange("password", e.target.value)
-    }
-    fullWidth
-    helperText="Member can use this password to login."
-  />
-)}
+              select
+              label="Create Login Account?"
+              value={form.create_account}
+              onChange={(e) =>
+                handleChange("create_account", e.target.value)
+              }
+              helperText={
+                form.create_account === "true"
+                  ? "After saving, a password setup link will be sent to the member email."
+                  : "You can create a login account later if needed."
+              }
+              fullWidth
+            >
+              <MenuItem value="true">Yes, create account</MenuItem>
+              <MenuItem value="false">No, member record only</MenuItem>
+            </TextField>
           </Box>
         </DialogContent>
 
@@ -520,7 +577,7 @@ const authUser = authResponse?.data;
         }}
       >
         <Alert
-          severity="success"
+          severity={snackbarSeverity}
           variant="filled"
           onClose={() => setSnackbarOpen(false)}
         >

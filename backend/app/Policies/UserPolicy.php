@@ -7,12 +7,9 @@ use App\Models\User;
 
 class UserPolicy
 {
-    /**
-     * Automatically grant all permissions to super admins.
-     */
     public function before(User $requester, string $ability): ?bool
     {
-        if ($requester->hasRole('super-admin')) {
+        if ($requester->hasRole('admin')) {
             return true;
         }
 
@@ -22,7 +19,7 @@ class UserPolicy
     public function viewAny(User $requester): bool
     {
         $conditions = [
-            $requester->hasRole('super-admin'),
+            $requester->hasRole('admin'),
         ];
 
         return in_array(true, $conditions, true);
@@ -31,7 +28,7 @@ class UserPolicy
     public function view(User $requester, User $user): bool
     {
         $conditions = [
-            $requester->hasRole('super-admin'),
+            $requester->hasRole('admin'),
             $requester->id === $user->id,
             $requester->can(UserPermissionEnum::ViewAny->value),
         ];
@@ -42,7 +39,7 @@ class UserPolicy
     public function create(User $requester): bool
     {
         $conditions = [
-            $requester->hasRole('super-admin'),
+            $requester->hasRole('admin'),
             $requester->can(UserPermissionEnum::Create->value),
         ];
 
@@ -52,9 +49,9 @@ class UserPolicy
     public function update(User $requester, User $user): bool
     {
         $conditions = [
-            $requester->hasRole('super-admin'),
+            $requester->hasRole('admin'),
             $requester->id === $user->id,
-            !$requester->id === $user->id && $requester->can(UserPermissionEnum::Update->value),
+            ! $requester->id === $user->id && $requester->can(UserPermissionEnum::Update->value),
         ];
 
         return in_array(true, $conditions, true);
@@ -63,7 +60,7 @@ class UserPolicy
     public function delete(User $requester): bool
     {
         $conditions = [
-            $requester->hasRole('super-admin'),
+            $requester->hasRole('admin'),
         ];
 
         return in_array(true, $conditions, true);
@@ -72,7 +69,7 @@ class UserPolicy
     public function restore(User $requester): bool
     {
         $conditions = [
-            $requester->hasRole('super-admin'),
+            $requester->hasRole('admin'),
         ];
 
         return in_array(true, $conditions, true);
@@ -81,7 +78,7 @@ class UserPolicy
     public function forceDelete(User $requester, User $user): bool
     {
         $conditions = [
-            $requester->hasRole('super-admin'),
+            $requester->hasRole('admin'),
         ];
 
         return in_array(true, $conditions, true);
@@ -90,7 +87,7 @@ class UserPolicy
     public function import(User $requester): bool
     {
         $conditions = [
-            $requester->hasRole('super-admin'),
+            $requester->hasRole('admin'),
         ];
 
         return in_array(true, $conditions, true);
@@ -99,7 +96,7 @@ class UserPolicy
     public function export(User $requester): bool
     {
         $conditions = [
-            $requester->hasRole('super-admin'),
+            $requester->hasRole('admin'),
         ];
 
         return in_array(true, $conditions, true);

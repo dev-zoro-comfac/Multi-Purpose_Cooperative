@@ -6,7 +6,6 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-
 Route::patch('users/{user}/restore', [UserController::class, 'restore'])->name('users.restore');
 Route::patch('users/{user}/profile', [ProfileController::class, 'update']);
 Route::patch('users/{user}/role', [UserController::class, 'updateRole']);
@@ -27,7 +26,6 @@ Route::prefix('notifications')->group(function () {
         Route::delete('/{notificationId}', 'delete')->name('notifications.delete');
     });
 });
-
 
 Route::prefix('auth/spa')->group(function () {
     Route::get('authenticate', [AuthController::class, 'authenticate']);

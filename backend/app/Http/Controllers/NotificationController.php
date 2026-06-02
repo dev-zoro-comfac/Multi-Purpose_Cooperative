@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Helpers\PaginationHelper;
 use App\Http\Resources\NotificationResource;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware; 
+use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller implements HasMiddleware
 {
@@ -23,24 +23,23 @@ class NotificationController extends Controller implements HasMiddleware
     public function list(Request $request)
     {
         $validated = $request->validate([
-            'unread'    => ['nullable', 'boolean'],
-            'per_page'  => ['integer', 'gt:0'],
-            'page'      => ['integer', 'gt:0']
+            'unread' => ['nullable', 'boolean'],
+            'per_page' => ['integer', 'gt:0'],
+            'page' => ['integer', 'gt:0'],
         ]);
 
         $unreadOnly = $validated['unread'] ?? false;
         $perPage = $validated['per_page'] ?? PaginationHelper::DEFAULT_PER_PAGE;
         $page = $validated['page'] ?? PaginationHelper::DEFAULT_PAGE;
 
-        $baseQuery = DatabaseNotification::query()->where('notifiable_id',  Auth::id());
+        $baseQuery = DatabaseNotification::query()->where('notifiable_id', Auth::id());
 
         $unreadNotificationsCount = (clone $baseQuery)->unread()->count();
 
         $notifications = $baseQuery
-            ->when($unreadOnly, fn($q) => $q->unread())
+            ->when($unreadOnly, fn ($q) => $q->unread())
             ->latest()
             ->paginate(perPage: $perPage, page: $page);
-
 
         $notificationsResource = NotificationResource::collection($notifications)
             ->response()
@@ -61,15 +60,15 @@ class NotificationController extends Controller implements HasMiddleware
     public function overview(Request $request)
     {
         $validated = $request->validate([
-            'unread' => ['nullable', 'boolean']
+            'unread' => ['nullable', 'boolean'],
         ]);
 
         $unreadOnly = $validated['unread'] ?? false;
-        $baseQuery = DatabaseNotification::query()->where('notifiable_id',  Auth::id());
+        $baseQuery = DatabaseNotification::query()->where('notifiable_id', Auth::id());
         $unreadNotificationsCount = (clone $baseQuery)->unread()->count();
 
         $notifications = $baseQuery
-            ->when($unreadOnly, fn($q) => $q->unread())
+            ->when($unreadOnly, fn ($q) => $q->unread())
             ->latest()
             ->limit(15)
             ->get();
@@ -94,7 +93,7 @@ class NotificationController extends Controller implements HasMiddleware
 
         $notification = $authenticatedUser->notifications()->find($notificationId);
 
-        if (!$notification) {
+        if (! $notification) {
             return response()->json(
                 [
                     'success' => false,
@@ -134,7 +133,7 @@ class NotificationController extends Controller implements HasMiddleware
 
         $notification = $authenticatedUser->notifications()->find($notificationId);
 
-        if (!$notification) {
+        if (! $notification) {
             return response()->json(
                 [
                     'success' => false,

@@ -2,10 +2,10 @@
 
 namespace App\Filters;
 
-use Exception;
 use Carbon\Carbon;
-use Spatie\QueryBuilder\Filters\Filter;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Spatie\QueryBuilder\Filters\Filter;
 
 class DateRangeFilter implements Filter
 {
@@ -26,13 +26,12 @@ class DateRangeFilter implements Filter
             $endDate = null;
 
             try {
-                $startDate = !empty($value[0]) ? Carbon::parse(trim($value[0]))->startOfDay() : null;
-                $endDate = !empty($value[1]) ? Carbon::parse(trim($value[1]))->endOfDay() : null;
+                $startDate = ! empty($value[0]) ? Carbon::parse(trim($value[0]))->startOfDay() : null;
+                $endDate = ! empty($value[1]) ? Carbon::parse(trim($value[1]))->endOfDay() : null;
             } catch (Exception $e) {
             }
 
-
-            if (!$startDate && !$endDate) {
+            if (! $startDate && ! $endDate) {
                 $query->where($property, '>=', $unmatchableDate->toDateString());
             } elseif ($startDate && $endDate) {
                 $query->whereBetween($property, [$startDate, $endDate]);

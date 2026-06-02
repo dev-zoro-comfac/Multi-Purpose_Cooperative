@@ -1,6 +1,6 @@
 export const TRoleSchema = {
-  SuperAdmin: "super-admin",
   Admin: "admin",
-  Manager: "manager",
-  User: "user",
+  Accounting: "accounting",
+  Member: "member",
+  NonMember: "non-member",
 } as const;

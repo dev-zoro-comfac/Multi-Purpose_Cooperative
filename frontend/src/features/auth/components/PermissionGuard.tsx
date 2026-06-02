@@ -27,11 +27,9 @@ const PermissionGuard = ({
       permissions.some(p => p === permission)
     );
 
-    const isSuperAdmin = roles.some(
-      role => role === roleEnum.Enum["super-admin"]
-    );
+    const isAdmin = roles.some(role => role === roleEnum.Enum.admin);
 
-    return hasAnyPermission || isSuperAdmin;
+    return hasAnyPermission || isAdmin;
   }, [roles, permissions, requiredPermissions]);
 
   return isAuthorized ? <>{children}</> : <>{fallback}</>;

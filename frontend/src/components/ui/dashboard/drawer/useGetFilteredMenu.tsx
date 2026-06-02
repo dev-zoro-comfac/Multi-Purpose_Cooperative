@@ -31,7 +31,7 @@ export const useGetFilteredMenu = () => {
       children: group.children
         .filter(child => {
   if (
-    child.id === "accounting-loans" &&
+    (child.id === "accounting-loans" || child.id === "members") &&
     !(
       userRoles.includes("admin") ||
       userRoles.includes("accounting")

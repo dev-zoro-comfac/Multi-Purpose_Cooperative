@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Enums\Permissions\PermissionPermissionEnum;
 use App\Models\Permission;
-use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\AllowedSort;
-use Spatie\QueryBuilder\QueryBuilder;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedSort;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class PermissionController extends Controller implements HasMiddleware
 {
@@ -21,6 +21,7 @@ class PermissionController extends Controller implements HasMiddleware
             new Middleware(PermissionMiddleware::using(PermissionPermissionEnum::ViewMany->value), only: ['index']),
         ];
     }
+
     public function index()
     {
         $permissions = QueryBuilder::for(Permission::class)
@@ -38,7 +39,7 @@ class PermissionController extends Controller implements HasMiddleware
             [
                 'success' => true,
                 'message' => 'Permissions fetched successfully',
-                'data' => $permissions
+                'data' => $permissions,
             ],
             200
         );
@@ -49,7 +50,7 @@ class PermissionController extends Controller implements HasMiddleware
         return response()->json([
             'success' => true,
             'message' => 'Permission fetched successfully',
-            'data' => $permission
+            'data' => $permission,
         ]);
     }
 }

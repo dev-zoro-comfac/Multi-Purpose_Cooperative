@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\Models\Role;
-use App\Models\Permission;
-use App\Enums\RoleEnum;
 use App\Enums\Permissions\PermissionPermissionEnum;
 use App\Enums\Permissions\RolePermissionEnum;
 use App\Enums\Permissions\UserPermissionEnum;
+use App\Enums\RoleEnum;
+use App\Models\Permission;
+use App\Models\Role;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\PermissionRegistrar;
@@ -43,11 +43,6 @@ class RolesAndPermissionsSeeder extends Seeder
 
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $superAdmin = Role::firstOrCreate([
-            'name' => RoleEnum::SuperAdmin->value,
-            'guard_name' => 'web',
-        ]);
-
         $admin = Role::firstOrCreate([
             'name' => RoleEnum::Admin->value,
             'guard_name' => 'web',
@@ -63,17 +58,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'guard_name' => 'web',
         ]);
 
-        $employee = Role::firstOrCreate([
-            'name' => RoleEnum::Employee->value,
+        $nonMember = Role::firstOrCreate([
+            'name' => RoleEnum::NonMember->value,
             'guard_name' => 'web',
         ]);
 
-        $user = Role::firstOrCreate([
-            'name' => RoleEnum::User->value,
-            'guard_name' => 'web',
-        ]);
-
-        $superAdmin->givePermissionTo([
+        $admin->givePermissionTo([
             UserPermissionEnum::ViewMany->value,
             UserPermissionEnum::ViewOne->value,
             UserPermissionEnum::ViewAny->value,
@@ -104,33 +94,6 @@ class RolesAndPermissionsSeeder extends Seeder
             PermissionPermissionEnum::ViewProtectedData->value,
         ]);
 
-        $admin->givePermissionTo([
-            UserPermissionEnum::ViewMany->value,
-            UserPermissionEnum::ViewOne->value,
-            UserPermissionEnum::ViewAny->value,
-            UserPermissionEnum::ViewOwn->value,
-            UserPermissionEnum::ViewOptions->value,
-            UserPermissionEnum::ViewProtectedData->value,
-            UserPermissionEnum::Create->value,
-            UserPermissionEnum::Update->value,
-            UserPermissionEnum::SoftDelete->value,
-
-            RolePermissionEnum::ViewMany->value,
-            RolePermissionEnum::ViewOne->value,
-            RolePermissionEnum::ViewAny->value,
-            RolePermissionEnum::ViewOwn->value,
-            RolePermissionEnum::ViewProtectedData->value,
-            RolePermissionEnum::Create->value,
-            RolePermissionEnum::Update->value,
-            RolePermissionEnum::HardDelete->value,
-
-            PermissionPermissionEnum::ViewMany->value,
-            PermissionPermissionEnum::ViewOne->value,
-            PermissionPermissionEnum::ViewAny->value,
-            PermissionPermissionEnum::ViewOwn->value,
-            PermissionPermissionEnum::ViewProtectedData->value,
-        ]);
-
         $accounting->givePermissionTo([
             UserPermissionEnum::ViewMany->value,
             UserPermissionEnum::ViewOne->value,
@@ -144,12 +107,7 @@ class RolesAndPermissionsSeeder extends Seeder
             UserPermissionEnum::Update->value,
         ]);
 
-        $employee->givePermissionTo([
-            UserPermissionEnum::ViewOwn->value,
-            UserPermissionEnum::Update->value,
-        ]);
-
-        $user->givePermissionTo([
+        $nonMember->givePermissionTo([
             UserPermissionEnum::ViewOwn->value,
             UserPermissionEnum::Update->value,
         ]);

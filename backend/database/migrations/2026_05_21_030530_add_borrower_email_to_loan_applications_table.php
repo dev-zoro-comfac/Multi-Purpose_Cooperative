@@ -10,21 +10,21 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::table('loan_applications', function (Blueprint $table) {
-        $table->string('borrower_email')
-            ->nullable()
-            ->after('borrower_name');
-    });
-}
+    {
+        Schema::table('loan_applications', function (Blueprint $table) {
+            $table->string('borrower_email')
+                ->nullable()
+                ->after('borrower_name');
+        });
+    }
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
-{
-    Schema::table('loan_applications', function (Blueprint $table) {
-        $table->dropColumn('borrower_email');
-    });
-}
+    {
+        Schema::table('loan_applications', function (Blueprint $table) {
+            $table->dropColumn('borrower_email');
+        });
+    }
 };

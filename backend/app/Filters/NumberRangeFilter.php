@@ -2,8 +2,8 @@
 
 namespace App\Filters;
 
-use Spatie\QueryBuilder\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
+use Spatie\QueryBuilder\Filters\Filter;
 
 class NumberRangeFilter implements Filter
 {
@@ -17,14 +17,14 @@ class NumberRangeFilter implements Filter
             $startValue = null;
             $endValue = null;
 
-            if (!empty($value[0]) && is_numeric($value[0])) {
+            if (! empty($value[0]) && is_numeric($value[0])) {
                 $startValue = $value[0];
             }
-            if (!empty($value[1]) && is_numeric($value[1])) {
+            if (! empty($value[1]) && is_numeric($value[1])) {
                 $endValue = $value[1];
             }
 
-            if (!$startValue && !$endValue) {
+            if (! $startValue && ! $endValue) {
                 $query->where($property, '>=', $unmatchableValue);
             } elseif ($startValue && $endValue) {
                 $query->whereBetween($property, [$startValue, $endValue]);

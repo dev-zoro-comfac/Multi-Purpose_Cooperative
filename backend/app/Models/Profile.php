@@ -29,27 +29,27 @@ class Profile extends Model
 
     protected function fullName(): Attribute
     {
-        return Attribute::make(get: fn(mixed $value, array $attributes) => "{$attributes['first_name']} {$attributes['last_name']}");
+        return Attribute::make(get: fn (mixed $value, array $attributes) => "{$attributes['first_name']} {$attributes['last_name']}");
     }
 
     protected function createdAt(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $value ? Carbon::parse($value)->format('M j, Y, g:i a') : null
+            get: fn ($value) => $value ? Carbon::parse($value)->format('M j, Y, g:i a') : null
         );
     }
 
     protected function deletedAt(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $value ? Carbon::parse($value)->format('M j, Y, g:i a') : null
+            get: fn ($value) => $value ? Carbon::parse($value)->format('M j, Y, g:i a') : null
         );
     }
 
     protected function updatedAt(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $value ? Carbon::parse($value)->diffForHumans() : null
+            get: fn ($value) => $value ? Carbon::parse($value)->diffForHumans() : null
         );
     }
 }

@@ -31,17 +31,17 @@ return new class extends Migration
                     ->nullable();
             }
 
-           $table->foreignUlid('reviewed_by')
+            $table->foreignUlid('reviewed_by')
                 ->nullable()
                 ->constrained('users')
                 ->nullOnDelete();
 
             if (! Schema::hasColumn('loan_applications', 'approved_by')) {
 
-            $table->foreignUlid('approved_by')
-                ->nullable()
-                ->constrained('users')
-                ->nullOnDelete();
+                $table->foreignUlid('approved_by')
+                    ->nullable()
+                    ->constrained('users')
+                    ->nullOnDelete();
             }
         });
     }

@@ -9,7 +9,7 @@ class ArrayHelper
     public static function validateNotEmptyArray(array $arr): void
     {
         if (empty($arr)) {
-            throw new InvalidArgumentException("Array must not be empty.");
+            throw new InvalidArgumentException('Array must not be empty.');
         }
     }
 
@@ -19,7 +19,7 @@ class ArrayHelper
             NumberHelper::validateNumericStringFormat($value);
         }
     }
-    
+
     public static function validateNotEmptyNumericArray(array $arr): void
     {
         self::validateNotEmptyArray($arr);

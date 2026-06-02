@@ -18,12 +18,6 @@ class DatabaseSeeder extends Seeder
 
         $users = [
             [
-                'email' => 'super.admin@test.com',
-                'role' => RoleEnum::SuperAdmin->value,
-                'first_name' => 'SUPER',
-                'last_name' => 'ADMIN',
-            ],
-            [
                 'email' => 'admin@test.com',
                 'role' => RoleEnum::Admin->value,
                 'first_name' => 'ADMIN',
@@ -42,16 +36,10 @@ class DatabaseSeeder extends Seeder
                 'last_name' => 'MEMBER',
             ],
             [
-                'email' => 'employee@test.com',
-                'role' => RoleEnum::Employee->value,
-                'first_name' => 'EMPLOYEE',
-                'last_name' => 'EMPLOYEE',
-            ],
-            [
-                'email' => 'user@test.com',
-                'role' => RoleEnum::User->value,
-                'first_name' => 'USER',
-                'last_name' => 'USER',
+                'email' => 'non.member@test.com',
+                'role' => RoleEnum::NonMember->value,
+                'first_name' => 'NON',
+                'last_name' => 'MEMBER',
             ],
         ];
 

@@ -36,7 +36,7 @@ const DashboardPage = () => {
 
   if (
     roles.includes("member") ||
-    roles.includes("non_member")
+    roles.includes("non-member")
   ) {
     router.replace("/dashboard/member");
   }
@@ -215,7 +215,7 @@ const DashboardStat = ({
   value,
 }: {
   title: string;
-  value: string;
+  value: string | number;
 }) => {
   return (
     <Card

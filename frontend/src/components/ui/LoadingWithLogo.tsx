@@ -23,7 +23,7 @@ export default function LoadingWithLogo() {
             gap: 2,
           }}
         >
-          <Typography sx={{ fontSize: 40, fontWeight: "bold" }}>App</Typography>
+          <Typography variant="h3" fontWeight="bold">App</Typography>
           <LinearProgress
             color="primary"
             sx={{ width: 90, height: 6, marginTop: "-18px" }}

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('middle_name')->nullable();
             $table->string('last_name');
             $table->string('contact_number');
-            $table->enum('gender', array_map(fn($case) => $case->value, GenderEnum::cases()))->nullable();
+            $table->enum('gender', array_map(fn ($case) => $case->value, GenderEnum::cases()))->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

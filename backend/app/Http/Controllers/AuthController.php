@@ -2,9 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Member;
+use App\Models\User;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Member;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class AuthController extends Controller
 {
@@ -19,7 +25,7 @@ class AuthController extends Controller
             return response()->json(
                 [
                     'success' => false,
-                    'message' => 'The provided credentials do not match our records.'
+                    'message' => 'The provided credentials do not match our records.',
                 ],
                 401
             );
@@ -29,7 +35,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Logged in successfully!'
+            'message' => 'Logged in successfully!',
         ], 200);
     }
 
@@ -43,7 +49,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Logged out successfully!'
+            'message' => 'Logged out successfully!',
         ], 200);
     }
 
@@ -72,12 +78,69 @@ class AuthController extends Controller
                 'permissions' => $permissions,
                 'roles' => $roles,
                 'member' => $member ? [
-                'id' => $member->id,
-                'member_no' => $member->member_no,
-                'first_name' => $member->first_name,
-                'last_name' => $member->last_name,
-] : null,
-            ]
+                    'id' => $member->id,
+                    'member_no' => $member->member_no,
+                    'first_name' => $member->first_name,
+                    'last_name' => $member->last_name,
+                ] : null,
+            ],
         ], 200);
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        if ($status !== Password::RESET_LINK_SENT) {
+            return response()->json([
+                'success' => false,
+                'message' => __($status),
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => __($status),
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $validated = $request->validate([
+            'token' => ['required'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'confirmed', PasswordRule::min(8)->letters()->numbers()->symbols()],
+        ]);
+
+        $status = Password::reset(
+            $validated,
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                    'remember_token' => Str::random(60),
+                    'password_changed_at' => now(),
+                ])->save();
+
+                event(new PasswordReset($user));
+            }
+        );
+
+        if ($status !== Password::PASSWORD_RESET) {
+            return response()->json([
+                'success' => false,
+                'message' => __($status),
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => __($status),
+        ]);
     }
 }

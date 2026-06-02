@@ -31,7 +31,7 @@ class ProfileService
         return response()->json([
             'success' => true,
             'message' => 'Profile updated successfully',
-            'data' => new UserResource($user)
+            'data' => new UserResource($user),
         ], 200);
     }
 }

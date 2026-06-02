@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\User;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ImportUserRequest extends FormRequest
@@ -17,12 +18,12 @@ class ImportUserRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        return  [
-            'users' => 'required|file|mimes:xlsx,csv|max:10240'
+        return [
+            'users' => 'required|file|mimes:xlsx,csv|max:10240',
         ];
     }
 

@@ -42,7 +42,7 @@ const DashboardPage = () => {
   useEffect(() => {
     const roles = authUser?.roles ?? [];
 
-    if (roles.includes("member") || roles.includes("non_member")) {
+    if (roles.includes("member") || roles.includes("non-member")) {
       router.replace("/dashboard/member");
     }
   }, [authUser, router]);

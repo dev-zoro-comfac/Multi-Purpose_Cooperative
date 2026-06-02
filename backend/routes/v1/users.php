@@ -20,8 +20,6 @@ Route::prefix('users')->group(function () {
         Route::get('export', 'export')->name('export');
         Route::get('export/download/{filename}', 'downloadExportFile')->name('download.export.file');
 
-
-
         Route::get('{user}', 'show')->name('show');
         Route::put('{user}', 'update')->name('update.put');
         Route::patch('{user}', 'update')->name('update.patch');

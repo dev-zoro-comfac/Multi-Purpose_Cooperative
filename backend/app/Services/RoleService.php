@@ -2,10 +2,9 @@
 
 namespace App\Services;
 
-use Exception;
-use App\Models\Role;
-use App\Enums\RoleEnum;
 use App\Http\Resources\RoleResource;
+use App\Models\Role;
+use Exception;
 use Illuminate\Support\Arr;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedSort;
@@ -31,17 +30,10 @@ class RoleService
             ->defaultSort('name');
     }
 
-    public function list(
-        bool $isSuperAdmin = false
-    ) {
+    public function list()
+    {
         $roles = $this
             ->listQuery()
-            ->when(
-                !$isSuperAdmin,
-                function ($query) {
-                    $query->where('name', '!=', RoleEnum::SuperAdmin->value);
-                }
-            )
             ->get();
 
         return RoleResource::collection($roles);
@@ -58,30 +50,30 @@ class RoleService
         return new RoleResource($role);
     }
 
-
     public function storeOrFail(
         string $name,
-        string $guardName = "web"
+        string $guardName = 'web'
     ) {
         try {
             return Role::create([
                 'name' => $name,
-                'guard_name' => $guardName
+                'guard_name' => $guardName,
             ]);
         } catch (Exception $e) {
             throw new Exception($e->getMessage() ?? 'Failed to create role. Please try again.');
         }
     }
+
     public function updateOrFail(
         array $data,
         string $roleId
     ) {
         $role = $this->showOrFail($roleId);
 
-        $updateData =  Arr::except(
+        $updateData = Arr::except(
             $data,
             [
-                'permissions'
+                'permissions',
             ]
         );
 

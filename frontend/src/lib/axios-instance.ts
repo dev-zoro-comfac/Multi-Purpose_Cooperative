@@ -24,8 +24,8 @@ axiosInstance.interceptors.request.use(config => {
         config.headers["X-Socket-Id"] = socketId;
       }
     }
-  } catch (error) {
-    console.warn("Echo not ready, skipping X-Socket-Id header", error);
+  } catch {
+    // Echo is optional and may not be configured before the first auth request.
   }
 
   return config;

@@ -24,14 +24,14 @@ class StoreUserRequest extends FormRequest
                 'string',
                 'min:2',
                 'max:255',
-                new LettersAndSpaceOnly()
+                new LettersAndSpaceOnly,
             ],
 
             'middle_name' => [
                 'nullable',
                 'string',
                 'max:255',
-                new LettersAndSpaceOnly()
+                new LettersAndSpaceOnly,
             ],
 
             'last_name' => [
@@ -39,7 +39,7 @@ class StoreUserRequest extends FormRequest
                 'string',
                 'min:2',
                 'max:255',
-                new LettersAndSpaceOnly()
+                new LettersAndSpaceOnly,
             ],
 
             'contact_number' => [
@@ -47,18 +47,18 @@ class StoreUserRequest extends FormRequest
                 'string',
                 // 'regex:/^(09|\+639)\d{9}$/',
                 'min:11',
-                'max:13'
+                'max:13',
             ],
 
             'gender' => [
                 'nullable',
-                Rule::in(array_map(fn($case) => $case->value, GenderEnum::cases())),
+                Rule::in(array_map(fn ($case) => $case->value, GenderEnum::cases())),
             ],
 
             'roles' => [
                 'required',
                 'array',
-                'min:1'
+                'min:1',
             ],
 
             'roles.*' => [
@@ -69,13 +69,13 @@ class StoreUserRequest extends FormRequest
             'email' => [
                 'required',
                 'email',
-                Rule::unique('users', 'email')
+                Rule::unique('users', 'email'),
             ],
 
             'password' => [
                 'required',
                 'confirmed',
-                Password::min(8)->letters()->numbers()->symbols()
+                Password::min(8)->letters()->numbers()->symbols(),
             ],
         ];
     }

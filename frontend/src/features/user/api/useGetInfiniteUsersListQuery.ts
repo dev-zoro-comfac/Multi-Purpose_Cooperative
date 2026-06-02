@@ -19,7 +19,7 @@ export const useGetInfiniteUsersListQuery = () => {
     ...columnFilters,
     ...(trashOnly ? [{ id: "trashed", value: "only" }] : []),
     { id: "full_name", value: debouncedEmployeeIdSearch },
-    { id: "role", value: roleEnum.Enum.user },
+    { id: "role", value: roleEnum.Enum["non-member"] },
   ];
 
   const options = {

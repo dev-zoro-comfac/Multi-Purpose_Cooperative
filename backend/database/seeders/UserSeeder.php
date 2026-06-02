@@ -15,20 +15,18 @@ class UserSeeder extends Seeder
             ->count(10)
             ->has(Profile::factory())
             ->create()
-            ->each(fn($user) => $user->assignRole(RoleEnum::Admin->value));
-
-
-        User::factory()
-            ->count(10)
-            ->has(Profile::factory())
-            ->create()
-            ->each(fn($user) => $user->assignRole(RoleEnum::Employee->value));
-
+            ->each(fn ($user) => $user->assignRole(RoleEnum::Admin->value));
 
         User::factory()
             ->count(10)
             ->has(Profile::factory())
             ->create()
-            ->each(fn($user) => $user->assignRole(RoleEnum::User->value));
+            ->each(fn ($user) => $user->assignRole(RoleEnum::Accounting->value));
+
+        User::factory()
+            ->count(10)
+            ->has(Profile::factory())
+            ->create()
+            ->each(fn ($user) => $user->assignRole(RoleEnum::NonMember->value));
     }
 }

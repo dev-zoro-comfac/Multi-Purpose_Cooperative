@@ -35,11 +35,11 @@ class UserResource extends JsonResource
             'profile' => new ProfileResource($this->whenLoaded('profile')),
             'roles' => $this->whenLoaded(
                 'roles',
-                fn() => RoleResource::collection($this->whenLoaded('roles'))
+                fn () => RoleResource::collection($this->whenLoaded('roles'))
             ),
             'permissions' => $this->whenLoaded(
                 'permissions',
-                fn() => PermissionResource::collection($this->getAllPermissions())
+                fn () => PermissionResource::collection($this->getAllPermissions())
             ),
         ];
     }

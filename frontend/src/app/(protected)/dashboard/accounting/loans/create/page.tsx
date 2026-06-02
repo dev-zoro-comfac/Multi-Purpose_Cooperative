@@ -284,7 +284,7 @@ export default function CreateLoanPage() {
 
   if (
     roles.includes("member") ||
-    roles.includes("non_member")
+    roles.includes("non-member")
   ) {
     router.push("/dashboard/member");
     return;
@@ -900,7 +900,7 @@ export default function CreateLoanPage() {
 
   if (
     roles.includes("member") ||
-    roles.includes("non_member")
+    roles.includes("non-member")
   ) {
     router.push("/dashboard/member");
     return;

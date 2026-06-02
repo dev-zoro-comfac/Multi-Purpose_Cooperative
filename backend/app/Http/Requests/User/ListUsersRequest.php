@@ -15,7 +15,7 @@ class ListUsersRequest extends FormRequest
     {
         return [
             'per_page' => ['integer', 'gt:0'],
-            'page' => ['integer', 'gt:0']
+            'page' => ['integer', 'gt:0'],
         ];
     }
 }

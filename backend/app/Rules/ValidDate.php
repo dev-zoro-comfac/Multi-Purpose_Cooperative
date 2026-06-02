@@ -12,7 +12,7 @@ class ValidDate implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!DateHelper::isValidDate($value, $this->format)) {
+        if (! DateHelper::isValidDate($value, $this->format)) {
             $fail("The {$attribute} must be a valid date");
         }
     }

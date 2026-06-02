@@ -3,11 +3,9 @@
 namespace App\Http\Requests\User;
 
 use App\Models\User;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class UpdateUserPasswordRequest extends FormRequest
@@ -23,24 +21,24 @@ class UpdateUserPasswordRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         $authenticatedUser = User::findOrFail(Auth::user()->id);
 
-        $isSuperAdmin =  $authenticatedUser->hasRole('super-admin');
+        $isAdmin = $authenticatedUser->hasRole('admin');
 
         return [
             'current_password' => [
-                $isSuperAdmin ? 'nullable' : 'required',
+                $isAdmin ? 'nullable' : 'required',
             ],
 
             'password' => [
                 'string',
                 'required',
                 'confirmed',
-                Password::min(8)->letters()->numbers()->symbols()
+                Password::min(8)->letters()->numbers()->symbols(),
             ],
         ];
     }

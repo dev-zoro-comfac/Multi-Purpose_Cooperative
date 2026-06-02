@@ -6,6 +6,7 @@ import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import { RolePermission, UserPermission } from "@/constant/permissions";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 
 type MenuGroupItemChildren = {
   id: string;
@@ -128,6 +129,15 @@ const account: MenuGroup = {
   description:
   "View your borrower account and loan status",
 },
+
+    {
+    id: "members",
+    title: "Members",
+    type: "item",
+    url: "/dashboard/members",
+    icon: GroupsOutlinedIcon,
+    description: "Manage cooperative members and setup links",
+    },
 
     {
     id: "accounting-loans",

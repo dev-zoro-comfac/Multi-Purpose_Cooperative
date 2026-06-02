@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
-use App\Services\RoleService;
-use App\Enums\RoleEnum;
 use App\Enums\Permissions\RolePermissionEnum;
 use App\Http\Requests\Role\UpdateRoleRequest;
+use App\Services\RoleService;
+use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Spatie\Permission\Middleware\PermissionMiddleware;
-
 
 class RoleController extends Controller implements HasMiddleware
 {
@@ -31,15 +29,13 @@ class RoleController extends Controller implements HasMiddleware
         Request $request,
         RoleService $roleService
     ) {
-        $isSuperAdmin = $request->user()->hasRole(RoleEnum::SuperAdmin->value);
-
-        $roles = $roleService->list($isSuperAdmin);
+        $roles = $roleService->list();
 
         return response()->json(
             [
                 'success' => true,
                 'message' => 'Roles fetched successfully',
-                'data' => $roles
+                'data' => $roles,
             ],
             200
         );
@@ -56,8 +52,8 @@ class RoleController extends Controller implements HasMiddleware
                     'required',
                     'string',
                     'max:255',
-                    'unique:roles,name'
-                ]
+                    'unique:roles,name',
+                ],
             ]);
 
             $role = $roleService->storeOrFail($validated['name']);
@@ -66,7 +62,7 @@ class RoleController extends Controller implements HasMiddleware
                 [
                     'success' => true,
                     'message' => 'Role created successfully',
-                    'data' => $role
+                    'data' => $role,
                 ],
                 201
             );
@@ -92,7 +88,7 @@ class RoleController extends Controller implements HasMiddleware
             [
                 'success' => true,
                 'message' => 'Role fetched successfully',
-                'data' => $role
+                'data' => $role,
             ],
             200
         );

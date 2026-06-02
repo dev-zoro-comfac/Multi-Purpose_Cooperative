@@ -2,10 +2,10 @@
 
 namespace App\Imports;
 
-use App\Models\Profile;
-use App\Models\User;
 use App\Enums\GenderEnum;
 use App\Enums\RoleEnum;
+use App\Models\Profile;
+use App\Models\User;
 use App\Notifications\User\ImportUsersStatusNotification;
 use App\Rules\LettersAndSpaceOnly;
 use App\Services\UserService;
@@ -13,27 +13,19 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithStartRow;
+use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
 use Maatwebsite\Excel\Row;
 
-class UsersFirstSheetImport implements
-    OnEachRow,
-    WithHeadingRow,
-    WithValidation,
-    WithChunkReading,
-    SkipsEmptyRows,
-    WithStartRow,
-    WithEvents,
-    ShouldQueue
+class UsersFirstSheetImport implements OnEachRow, ShouldQueue, SkipsEmptyRows, WithChunkReading, WithEvents, WithHeadingRow, WithStartRow, WithValidation
 {
     use Importable;
 
@@ -61,7 +53,7 @@ class UsersFirstSheetImport implements
             $user = User::updateOrCreate(
                 ['email' => $data['email']],
                 [
-                    'email'      => $data['email'],
+                    'email' => $data['email'],
                     'updated_at' => now(),
                 ]
             );
@@ -69,18 +61,18 @@ class UsersFirstSheetImport implements
             Profile::updateOrCreate(
                 ['user_id' => $user->id],
                 [
-                    'user_id'        => $user->id,
-                    'first_name'     => $data['first_name'],
-                    'middle_name'    => $data['middle_name'] ?? null,
-                    'last_name'      => $data['last_name'],
-                    'gender'         => $data['gender'] ?? null,
+                    'user_id' => $user->id,
+                    'first_name' => $data['first_name'],
+                    'middle_name' => $data['middle_name'] ?? null,
+                    'last_name' => $data['last_name'],
+                    'gender' => $data['gender'] ?? null,
                     'contact_number' => $data['contact_number'] ?? null,
                 ]
             );
 
-            $user->syncRoles([RoleEnum::User->value]);
+            $user->syncRoles([RoleEnum::NonMember->value]);
         } catch (\Exception $e) {
-            Log::error("Error processing row {$rowIndex}: " . $e->getMessage(), [
+            Log::error("Error processing row {$rowIndex}: ".$e->getMessage(), [
                 'exception' => $e,
             ]);
         }
@@ -109,14 +101,14 @@ class UsersFirstSheetImport implements
                 'string',
                 'min:2',
                 'max:255',
-                new LettersAndSpaceOnly()
+                new LettersAndSpaceOnly,
             ],
 
             'middle_name' => [
                 'nullable',
                 'string',
                 'max:255',
-                new LettersAndSpaceOnly()
+                new LettersAndSpaceOnly,
             ],
 
             'last_name' => [
@@ -124,7 +116,7 @@ class UsersFirstSheetImport implements
                 'string',
                 'min:2',
                 'max:255',
-                new LettersAndSpaceOnly()
+                new LettersAndSpaceOnly,
             ],
 
             'contact_number' => [
@@ -136,7 +128,7 @@ class UsersFirstSheetImport implements
                 'nullable',
                 Rule::in(
                     array_map(
-                        fn($case) => $case->value,
+                        fn ($case) => $case->value,
                         GenderEnum::cases()
                     )
                 ),
@@ -162,7 +154,7 @@ class UsersFirstSheetImport implements
 
                 $importer?->notify(new ImportUsersStatusNotification([
                     'success' => false,
-                    'message' => 'Users import has failed.' . $event->getException()->getMessage()
+                    'message' => 'Users import has failed.'.$event->getException()->getMessage(),
                 ]));
 
                 Log::error('Excel import failed', ['exception' => $event->getException()]);

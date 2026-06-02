@@ -9,11 +9,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class UserImportTemplate implements
-    FromCollection,
-    WithHeadings,
-    WithMapping,
-    WithStyles
+class UserImportTemplate implements FromCollection, WithHeadings, WithMapping, WithStyles
 {
     use Exportable;
 
@@ -27,7 +23,7 @@ class UserImportTemplate implements
                 'last_name' => 'Required. E.g. Doe',
                 'gender' => 'Required. male, female, others',
                 'contact_number' => 'Optional. Starts with 09 or +639. E.g. 09123456789',
-            ]
+            ],
         ]);
     }
 

@@ -10,8 +10,8 @@ class LoanApplicationResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-             'id' => $this->id,
-             'application_no' => $this->application_no,
+            'id' => $this->id,
+            'application_no' => $this->application_no,
 
             'borrower_name' => $this->borrower_name,
             'borrower_email' => $this->borrower_email,
@@ -58,20 +58,20 @@ class LoanApplicationResource extends JsonResource
             'documents' => $this->documents,
 
             'activity_logs' => $this->whenLoaded('activityLogs', function () {
-    return $this->activityLogs->map(function ($log) {
-        return [
-            'id' => $log->id,
-            'action' => $log->action,
-            'notes' => $log->notes,
-            'created_at' => $log->created_at,
-            'user' => $log->user ? [
-                'id' => $log->user->id,
-                'name' => $log->user->name ?? $log->user->email,
-                'email' => $log->user->email,
-            ] : null,
-        ];
-    });
-}),
+                return $this->activityLogs->map(function ($log) {
+                    return [
+                        'id' => $log->id,
+                        'action' => $log->action,
+                        'notes' => $log->notes,
+                        'created_at' => $log->created_at,
+                        'user' => $log->user ? [
+                            'id' => $log->user->id,
+                            'name' => $log->user->name ?? $log->user->email,
+                            'email' => $log->user->email,
+                        ] : null,
+                    ];
+                });
+            }),
 
             'created_at' => $this->created_at,
         ];

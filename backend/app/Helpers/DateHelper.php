@@ -11,6 +11,7 @@ class DateHelper
     {
         try {
             $carbonDate = Carbon::createFromFormat($format, $date);
+
             return $carbonDate->format($format) === $date;
         } catch (Exception $e) {
             return false;
@@ -24,7 +25,7 @@ class DateHelper
         return [
             $date->hour,
             $date->minute,
-            $date->second
+            $date->second,
         ];
     }
 

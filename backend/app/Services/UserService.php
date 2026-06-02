@@ -2,33 +2,32 @@
 
 namespace App\Services;
 
-use App\Enums\RoleEnum;
 use App\Exports\UserImportTemplate;
 use App\Exports\UsersExport;
-use App\Models\User;
-use App\Filters\RoleFilter;
 use App\Filters\DateRangeFilter;
 use App\Filters\FullnameFilter;
 use App\Filters\PermissionFilter;
+use App\Filters\RoleFilter;
 use App\Http\Resources\UserInfiniteResource;
 use App\Http\Resources\UserResource;
 use App\Imports\UsersFirstSheetImport;
 use App\Imports\UsersImport;
 use App\Jobs\User\NotifyUserExportStatus;
+use App\Models\User;
 use App\Policies\UserPolicy;
-use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\AllowedSort;
-use Spatie\QueryBuilder\QueryBuilder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedSort;
+use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\QueryBuilder\QueryBuilderRequest;
 
 class UserService
 {
     const DEFAULT_PAGE = 1;
+
     const DEFAULT_PER_PAGE = 10;
 
     public function __construct(
@@ -51,16 +50,16 @@ class UserService
                 AllowedFilter::partial('id'),
                 AllowedFilter::partial('email'),
                 AllowedFilter::partial('last_name', 'profiles.last_name'),
-                AllowedFilter::custom('full_name', new FullnameFilter()),
+                AllowedFilter::custom('full_name', new FullnameFilter),
                 AllowedFilter::partial('first_name', 'profiles.first_name'),
                 AllowedFilter::partial('middle_name', 'profiles.middle_name'),
                 AllowedFilter::partial('contact_number', 'profiles.contact_number'),
                 AllowedFilter::custom('created_on', new DateRangeFilter, 'users.created_at'),
                 AllowedFilter::custom('updated_on', new DateRangeFilter, 'users.updated_at'),
                 AllowedFilter::custom('deleted_on', new DateRangeFilter, 'users.deleted_at'),
-                AllowedFilter::custom('role', new RoleFilter()),
-                AllowedFilter::custom('permission', new PermissionFilter()),
-                AllowedFilter::trashed()
+                AllowedFilter::custom('role', new RoleFilter),
+                AllowedFilter::custom('permission', new PermissionFilter),
+                AllowedFilter::trashed(),
             ])
             ->defaultSort('-updated_at')
             ->allowedSorts([
@@ -68,10 +67,10 @@ class UserService
                 AllowedSort::field('created_on', 'created_at'),
                 AllowedSort::field('updated_on', 'updated_at'),
                 AllowedSort::field('deleted_on', 'deleted_at'),
-                AllowedSort::field('first_name',  'profiles.first_name'),
-                AllowedSort::field('middle_name',  'profiles.middle_name'),
-                AllowedSort::field('contact_number',  'profiles.contact_number'),
-                AllowedSort::field('last_name',  'profiles.last_name'),
+                AllowedSort::field('first_name', 'profiles.first_name'),
+                AllowedSort::field('middle_name', 'profiles.middle_name'),
+                AllowedSort::field('contact_number', 'profiles.contact_number'),
+                AllowedSort::field('last_name', 'profiles.last_name'),
             ])
             ->select('users.*')
             ->leftJoin('profiles', 'profiles.user_id', '=', 'users.id');
@@ -80,8 +79,8 @@ class UserService
     }
 
     public function list(
-        int $page = self::DEFAULT_PAGE,
-        int $perPage = self::DEFAULT_PER_PAGE,
+        int $page,
+        int $perPage,
         User $requester
     ) {
         $customRequest = request()->query();
@@ -100,7 +99,7 @@ class UserService
         return response()->json([
             'success' => true,
             'message' => 'Users fetched successfully.',
-            'data' => $users
+            'data' => $users,
         ]);
     }
 
@@ -111,17 +110,17 @@ class UserService
         $users = QueryBuilder::for(User::class)
             ->allowedFilters([
                 AllowedFilter::partial('id'),
-                AllowedFilter::custom('full_name', new FullnameFilter()),
+                AllowedFilter::custom('full_name', new FullnameFilter),
 
-                AllowedFilter::custom('role', new RoleFilter()),
-                AllowedFilter::custom('permission', new PermissionFilter()),
-                AllowedFilter::trashed()
+                AllowedFilter::custom('role', new RoleFilter),
+                AllowedFilter::custom('permission', new PermissionFilter),
+                AllowedFilter::trashed(),
             ])
             ->defaultSort('first_name')
             ->allowedSorts([
-                AllowedSort::field('first_name',  'profiles.first_name'),
-                AllowedSort::field('middle_name',  'profiles.middle_name'),
-                AllowedSort::field('last_name',  'profiles.last_name'),
+                AllowedSort::field('first_name', 'profiles.first_name'),
+                AllowedSort::field('middle_name', 'profiles.middle_name'),
+                AllowedSort::field('last_name', 'profiles.last_name'),
             ])
             ->selectRaw("
                 users.id as id,
@@ -142,8 +141,8 @@ class UserService
     {
         return QueryBuilder::for(User::class)
             ->allowedFilters([
-                AllowedFilter::custom('role', new RoleFilter()),
-                AllowedFilter::custom('permission', new PermissionFilter()),
+                AllowedFilter::custom('role', new RoleFilter),
+                AllowedFilter::custom('permission', new PermissionFilter),
                 AllowedFilter::callback('search', function ($query, $value) {
                     $query->whereRaw("CONCAT(profiles.first_name, ' ', profiles.last_name) LIKE ?", ["%{$value}%"])
                         ->orWhere('users.id', $value);
@@ -178,7 +177,7 @@ class UserService
         return response()->json([
             'success' => true,
             'message' => 'User fetched successfully.',
-            'data' => new UserResource($user)
+            'data' => new UserResource($user),
         ], 200);
     }
 
@@ -187,19 +186,6 @@ class UserService
         User $requester
     ) {
         $roles = $data['roles'] ?? [];
-
-        if (
-            Arr::where(
-                $roles,
-                fn($role) => $role === RoleEnum::SuperAdmin->value
-            ) &&
-            ! $requester->hasRole(RoleEnum::SuperAdmin->value)
-        ) {
-            return [
-                'success' => false,
-                'message' => 'Insufficient permissions: You are not authorized to add a Super Admin.'
-            ];
-        }
 
         $user = DB::transaction(function () use ($data, $roles) {
             $createdUser = User::create(
@@ -217,7 +203,7 @@ class UserService
                         'middle_name',
                         'last_name',
                         'contact_number',
-                        'gender'
+                        'gender',
                     ]
                 )
             );
@@ -230,10 +216,9 @@ class UserService
         return response()->json([
             'success' => true,
             'message' => 'User created successfully.',
-            'data' => new UserResource($user)
+            'data' => new UserResource($user),
         ], 201);
     }
-
 
     public function update(
         User $user,
@@ -264,10 +249,9 @@ class UserService
         return response()->json([
             'success' => true,
             'message' => 'User updated successfully.',
-            'data' => new UserResource($user)
+            'data' => new UserResource($user),
         ], 200);
     }
-
 
     public function destroy(
         User $user,
@@ -278,7 +262,7 @@ class UserService
         return response()->json([
             'success' => true,
             'message' => 'User deleted successfully.',
-            'data' => new UserResource($user)
+            'data' => new UserResource($user),
         ], 200);
     }
 
@@ -293,7 +277,7 @@ class UserService
         return response()->json([
             'success' => true,
             'message' => 'User restored successfully.',
-            'data' => new UserResource($user)
+            'data' => new UserResource($user),
         ], 200);
     }
 
@@ -328,7 +312,7 @@ class UserService
     {
         $filepath = "exports/users/{$filename}";
 
-        if (!Storage::disk('private')->exists($filepath)) {
+        if (! Storage::disk('private')->exists($filepath)) {
             return response()->json([
                 'success' => false,
                 'message' => 'File has already expired',

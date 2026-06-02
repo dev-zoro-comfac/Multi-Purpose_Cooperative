@@ -12,19 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('loan_amortizations', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('loan_application_id')
-        ->constrained()
-        ->cascadeOnDelete();
+            $table->id();
+            $table->foreignId('loan_application_id')
+                ->constrained()
+                ->cascadeOnDelete();
 
-    $table->integer('payday_no');
-    $table->decimal('amortization', 12, 2);
-    $table->decimal('interest', 12, 2);
-    $table->decimal('principal', 12, 2);
-    $table->decimal('balance', 12, 2);
+            $table->integer('payday_no');
+            $table->decimal('amortization', 12, 2);
+            $table->decimal('interest', 12, 2);
+            $table->decimal('principal', 12, 2);
+            $table->decimal('balance', 12, 2);
 
-    $table->timestamps();
-});
+            $table->timestamps();
+        });
     }
 
     /**

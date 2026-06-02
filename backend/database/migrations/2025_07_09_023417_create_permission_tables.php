@@ -95,9 +95,9 @@ return new class extends Migration
             }
         });
 
-            Schema::create($tableNames['role_has_permissions'], static function (Blueprint $table) use ($tableNames, $pivotRole, $pivotPermission) {
-                $table->string($pivotPermission, 36);
-                $table->string($pivotRole, 36);
+        Schema::create($tableNames['role_has_permissions'], static function (Blueprint $table) use ($tableNames, $pivotRole, $pivotPermission) {
+            $table->string($pivotPermission, 36);
+            $table->string($pivotRole, 36);
 
             $table->foreign($pivotPermission)
                 ->references('id') // permission id
@@ -125,7 +125,7 @@ return new class extends Migration
         $tableNames = config('permission.table_names');
 
         if (empty($tableNames)) {
-            throw new \Exception('Error: config/permission.php not found and defaults could not be merged. Please publish the package configuration before proceeding, or drop the tables manually.');
+            throw new Exception('Error: config/permission.php not found and defaults could not be merged. Please publish the package configuration before proceeding, or drop the tables manually.');
         }
 
         Schema::drop($tableNames['role_has_permissions']);

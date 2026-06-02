@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Http\Requests\Profile\UpdateProfileRequest;
+use App\Models\User;
 use App\Services\ProfileService;
 use Illuminate\Support\Facades\Auth;
 
