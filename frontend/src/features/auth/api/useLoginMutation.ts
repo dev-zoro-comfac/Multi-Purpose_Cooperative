@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "../../../lib/axios-instance";
+import { getBackendOrigin } from "@/lib/get-backend-api-url";
 
-import { authQueryKey } from "./useAuthenticatedUser";
+import { authQueryKey, getAuthenticatedUser } from "./useAuthenticatedUser";
 
 axiosInstance.defaults.withCredentials = true;
 axiosInstance.defaults.withXSRFToken = true;
@@ -12,14 +13,6 @@ axiosInstance.defaults.withXSRFToken = true;
 type useLoginParamsType = {
   email: string;
   password: string;
-};
-
-const getBackendOrigin = () => {
-  const apiUrl =
-    process.env.NEXT_PUBLIC_BACKEND_API_URL ||
-    "http://localhost:8000/api/v1";
-
-  return new URL(apiUrl).origin;
 };
 
 const useLogin = async ({ email, password }: useLoginParamsType) => {
@@ -42,26 +35,19 @@ export const useLoginMutation = () => {
   return useMutation({
     mutationFn: useLogin,
     onSuccess: async () => {
-  await queryClient.invalidateQueries({
-    queryKey: [authQueryKey],
-  });
+      const authUser = await queryClient.fetchQuery({
+        queryKey: [authQueryKey],
+        queryFn: getAuthenticatedUser,
+      });
 
-  const authUser = queryClient.getQueryData([
-    authQueryKey,
-  ]) as {
-    data?: {
-      roles?: string[];
-    };
-  };
+      const roles = authUser?.data?.roles ?? [];
 
-  const roles = authUser?.data?.roles ?? [];
+      if (roles.includes("member")) {
+        router.push("/dashboard/member");
+        return;
+      }
 
-  if (roles.includes("member")) {
-    router.push("/dashboard/member");
-    return;
-  }
-
-  router.push("/dashboard");
-},
+      router.push("/dashboard");
+    },
   });
 };

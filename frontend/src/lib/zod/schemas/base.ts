@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export type TBaseRole = z.infer<typeof baseRoleSchema>;
 export const baseRoleSchema = z.object({
-  id: z.string(),
+  id: z.coerce.string(),
   name: z.string(),
   created_at: z.string().nullable().optional(),
   updated_at: z.string().nullable().optional(),
@@ -11,7 +11,7 @@ export const baseRoleSchema = z.object({
 
 export type TBasePermission = z.infer<typeof basePermissionSchema>;
 export const basePermissionSchema = z.object({
-  id: z.string(),
+  id: z.coerce.string(),
   name: z.string(),
   guard_name: z.string().nullable().optional(),
   category: z.string(),
@@ -22,13 +22,13 @@ export const basePermissionSchema = z.object({
 
 export type BaseProfile = z.infer<typeof baseProfileSchema>;
 export const baseProfileSchema = z.object({
-  id: z.string(),
+  id: z.coerce.string(),
   first_name: z.string(),
   middle_name: z.string().nullable().optional(),
   last_name: z.string(),
   gender: z.string().nullable().optional(),
   contact_number: z.string().nullable().optional(),
-  user_id: z.string(),
+  user_id: z.coerce.string(),
   deleted_at: z.string().nullable().optional(),
   created_at: z.string().nullable().optional(),
   updated_at: z.string().nullable().optional(),
@@ -36,7 +36,7 @@ export const baseProfileSchema = z.object({
 
 export type BaseUser = z.infer<typeof baseUserSchema>;
 export const baseUserSchema = z.object({
-  id: z.string(),
+  id: z.coerce.string(),
   email: z.string().email(),
   email_verified_at: z.string().nullable().optional(),
   password: z.string().nullable().optional(),
@@ -52,7 +52,7 @@ export const baseUserSchema = z.object({
 
 export type TBaseNotification = z.infer<typeof baseNotificationSchema>;
 export const baseNotificationSchema = z.object({
-  id: z.string(),
+  id: z.coerce.string(),
   data: z.object({
     success: z.boolean().optional().nullable(),
     message: z.string().optional().nullable(),

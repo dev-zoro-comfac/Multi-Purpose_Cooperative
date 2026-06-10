@@ -19,12 +19,24 @@ type PUsersTableTopBar<T> = {
 const UsersTableTopBar = <T,>({ table }: PUsersTableTopBar<T>) => {
   return (
     <Stack
-      sx={{
-        p: 2,
-        flexDirection: "row",
-      }}
+    sx={{
+      p: 2,
+      gap: 2,
+      flexDirection: { xs: "column", md: "row" },
+      alignItems: { xs: "stretch", md: "center" },
+      justifyContent: "space-between",
+      borderBottom: theme => `1px solid ${theme.palette.divider}`,
+      bgcolor: "background.paper",
+    }}
     >
-      <Stack sx={{ flexDirection: "row", alignItems: "center" }}>
+      <Stack
+        sx={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 1,
+        flexWrap: "wrap",
+      }}
+      >
         <ColumnVisibilitySelector table={table} />
         <TableSort table={table} />
         <IncludeTrash />
@@ -32,7 +44,7 @@ const UsersTableTopBar = <T,>({ table }: PUsersTableTopBar<T>) => {
       <Stack
         sx={{
           flexDirection: "row",
-          justifyContent: { sx: "flex-start", md: "flex-end" },
+          justifyContent: { xs: "flex-start", md: "flex-end" },
           gap: 1,
           flexGrow: 1,
           alignItems: "center",
@@ -43,7 +55,7 @@ const UsersTableTopBar = <T,>({ table }: PUsersTableTopBar<T>) => {
         </PermissionGuard>
 
         <PermissionGuard requiredPermissions={[UserPermission.Import]}>
-          <Tooltip title="Import Data" arrow>
+          <Tooltip title="Import User Accounts" arrow>
             <IconButton
               color="primary"
               component={Link}
@@ -57,7 +69,7 @@ const UsersTableTopBar = <T,>({ table }: PUsersTableTopBar<T>) => {
         </PermissionGuard>
 
         <PermissionGuard requiredPermissions={[UserPermission.Create]}>
-          <Tooltip title="Create User" arrow>
+          <Tooltip title="Create User Account" arrow>
             <Button
               variant="contained"
               startIcon={<AddOutlinedIcon />}
@@ -65,7 +77,7 @@ const UsersTableTopBar = <T,>({ table }: PUsersTableTopBar<T>) => {
               href="users/create"
               size="small"
             >
-              Add User
+              Add Account
             </Button>
           </Tooltip>
         </PermissionGuard>

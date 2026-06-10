@@ -46,6 +46,9 @@ import { useGetNotification } from "@/features/notifications/api/useGetNotificat
 const Header = () => {
   const { open, toggle } = useDrawerStore();
   const { data } = useAuthenticatedUser();
+  const firstRoleName = data?.data?.roles?.[0] ?? "";
+  const accountLabel =
+    firstRoleName || data?.data?.name || "";
   const { data: notificationData } = useGetNotification();
   const { mutate: deleteNotification } = useDeleteNotificationMutation();
   const { mutate: logout } = useLogoutMutation();
@@ -714,7 +717,7 @@ const Header = () => {
             fontWeight={600}
             sx={{ display: { xs: "none", md: "block" } }}
           >
-            {data?.data?.name ?? ""}
+            {accountLabel}
           </Typography>
         </Button>
 

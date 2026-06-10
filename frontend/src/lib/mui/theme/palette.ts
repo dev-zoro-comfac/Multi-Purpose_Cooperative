@@ -1,4 +1,4 @@
-import { purple, contrastText, cyan, gold, green, grey, red } from "./color";
+import { contrastText, cyan, darkGreen, gold, green, grey, red } from "./color";
 import { PaletteOptions } from "@mui/material/styles";
 
 import "@mui/material/styles";
@@ -60,16 +60,16 @@ export const paletteOptions: PaletteOptions = {
     white: "#fff",
   },
   primary: {
-    lighter: purple[0],
-    100: purple[1],
-    200: purple[2],
-    light: purple[3],
-    400: purple[4],
-    main: purple[5],
-    dark: purple[6],
-    700: purple[7],
-    darker: purple[8],
-    900: purple[9],
+    lighter: darkGreen[0],
+    100: darkGreen[1],
+    200: darkGreen[2],
+    light: darkGreen[3],
+    400: darkGreen[4],
+    main: darkGreen[5],
+    dark: darkGreen[6],
+    700: darkGreen[7],
+    darker: darkGreen[8],
+    900: darkGreen[9],
     contrastText,
   },
   secondary: {

@@ -20,6 +20,9 @@ Route::prefix('auth/spa')->group(function () {
     Route::post('reset-password', [AuthController::class, 'resetPassword']);
 });
 
+Route::post('public/loan-applications', [LoanApplicationController::class, 'publicStore'])
+    ->middleware('throttle:10,1');
+
 Route::name('users.')->group(base_path('routes/v1/users.php'));
 Route::name('notifications.')->group(base_path('routes/v1/notifications.php'));
 

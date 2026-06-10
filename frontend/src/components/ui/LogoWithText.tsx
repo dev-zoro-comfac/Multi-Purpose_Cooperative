@@ -17,16 +17,16 @@ const LogoWithText = () => {
     alignItems: "center",
   }}
 >
-  <Logo sx={{ fontSize: 32 }} />
+  <Logo sx={{ fontSize: 40, flexShrink: 0 }} />
 
   <Stack spacing={0}>
     <Typography
-      variant="h5"
+      variant="subtitle1"
       fontWeight={800}
       color="primary"
       lineHeight={1}
     >
-      MPCS
+      Cornersteel
     </Typography>
 
     <Typography
@@ -34,7 +34,7 @@ const LogoWithText = () => {
       color="text.secondary"
       lineHeight={1.2}
     >
-      Cooperative System
+      Cooperative
     </Typography>
   </Stack>
 </Stack>

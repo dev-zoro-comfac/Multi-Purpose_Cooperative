@@ -42,7 +42,7 @@ const UserImportBtn = () => {
     );
   };
   return (
-    <Tooltip title="Import Data" arrow>
+    <Tooltip title="Import User Accounts" arrow>
       <IconButton
         color="primary"
         component="label"

@@ -15,7 +15,8 @@ const UsersTableHeader = <T,>({ table }: PUsersTableHeader<T>) => {
       component="div"
       sx={theme => {
         return {
-          backgroundColor: theme.palette.secondary.lighter,
+          backgroundColor: theme.palette.background.default,
+          borderBottom: `1px solid ${theme.palette.divider}`,
           position: "sticky",
           display: "grid",
           top: 0,

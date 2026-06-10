@@ -45,7 +45,9 @@ class LoanDocumentService
             'amortizations',
         ]);
 
-        foreach (self::GENERATED_DOCUMENTS as $documentConfig) {
+        $this->removeSkippedGeneratedDocuments($loanApplication);
+
+        foreach ($this->documentsForLoan($loanApplication) as $documentConfig) {
             $path = "loan-documents/generated/{$loanApplication->id}/{$documentConfig['file']}";
 
             $pdf = Pdf::loadView($documentConfig['view'], [
@@ -74,6 +76,11 @@ class LoanDocumentService
         ]);
 
         return $loanApplication->load('documents');
+    }
+
+    public function requiredDocumentTypes(LoanApplication $loanApplication): array
+    {
+        return array_column($this->documentsForLoan($loanApplication), 'type');
     }
 
     public function uploadSignedDocument(
@@ -117,5 +124,29 @@ class LoanDocumentService
     public function exists(LoanDocument $loanDocument): bool
     {
         return Storage::disk('public')->exists($loanDocument->file_path);
+    }
+
+    private function documentsForLoan(LoanApplication $loanApplication): array
+    {
+        return array_values(array_filter(
+            self::GENERATED_DOCUMENTS,
+            fn (array $documentConfig) => $documentConfig['type'] !== 'authorization_to_deduct'
+                || ($loanApplication->preferred_payment_method ?? config('loan.default_payment_method')) === 'salary_deduction'
+        ));
+    }
+
+    private function removeSkippedGeneratedDocuments(LoanApplication $loanApplication): void
+    {
+        $requiredTypes = $this->requiredDocumentTypes($loanApplication);
+
+        $loanApplication->documents()
+            ->whereNotIn('document_type', $requiredTypes)
+            ->where('status', 'generated')
+            ->where('is_signed', false)
+            ->get()
+            ->each(function (LoanDocument $document) {
+                Storage::disk('public')->delete($document->file_path);
+                $document->delete();
+            });
     }
 }

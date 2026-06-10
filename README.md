@@ -1,6 +1,6 @@
-# Multi-Purpose Cooperative System
+# Cornersteel Cooperative
 
-A full-stack loan and member management system for a multi-purpose cooperative. The project uses a Laravel API backend and a Next.js frontend.
+A full-stack loan and member management system for Cornersteel Cooperative. The project uses a Laravel API backend and a Next.js frontend.
 
 ## Features
 
@@ -134,8 +134,8 @@ MAIL_HOST=sandbox.smtp.mailtrap.io
 MAIL_PORT=2525
 MAIL_USERNAME=your_mailtrap_username
 MAIL_PASSWORD=your_mailtrap_password
-MAIL_FROM_ADDRESS="noreply@mpcs.test"
-MAIL_FROM_NAME="MPCS Cooperative System"
+MAIL_FROM_ADDRESS="noreply@cornersteel.test"
+MAIL_FROM_NAME="Cornersteel Cooperative"
 ```
 
 Then clear cached config:

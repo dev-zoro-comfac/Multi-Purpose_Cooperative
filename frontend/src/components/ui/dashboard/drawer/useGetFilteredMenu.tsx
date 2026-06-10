@@ -5,6 +5,11 @@ export const useGetFilteredMenu = () => {
   const { data: user } = useAuthenticatedUser();
   const userPermissions = user?.data?.permissions ?? [];
   const userRoles = user?.data?.roles ?? [];
+  const isAdminOrAccounting =
+    userRoles.includes("admin") || userRoles.includes("accounting");
+  const isBorrowerOnly =
+    (userRoles.includes("member") || userRoles.includes("non-member")) &&
+    !isAdminOrAccounting;
 
   const hasPermission = (
     requiredPermission?: string[],
@@ -30,12 +35,13 @@ export const useGetFilteredMenu = () => {
       ...group,
       children: group.children
         .filter(child => {
+  if (child.id === "home" && isBorrowerOnly) {
+    return false;
+  }
+
   if (
     (child.id === "accounting-loans" || child.id === "members") &&
-    !(
-      userRoles.includes("admin") ||
-      userRoles.includes("accounting")
-    )
+    !isAdminOrAccounting
   ) {
     return false;
   }
@@ -43,8 +49,8 @@ export const useGetFilteredMenu = () => {
  if (
   (child.id === "member-dashboard" ||
     child.id === "member-loans") &&
-  !userRoles.includes("member")
-) {
+  !isBorrowerOnly
+  ) {
   return false;
 }
 

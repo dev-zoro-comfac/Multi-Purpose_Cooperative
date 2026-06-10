@@ -17,7 +17,7 @@ const UsersTableBody = ({ table }: TableBodyProps) => {
   const rows = table.getRowModel().rows;
 
   return (
-    <MuiTableBody component="div">
+    <MuiTableBody component="div" sx={{ display: "block" }}>
       <List height={600} itemCount={rows.length} itemSize={60} width={"100%"}>
         {({ index, style }) => {
           const row = rows[index];
@@ -29,17 +29,31 @@ const UsersTableBody = ({ table }: TableBodyProps) => {
               key={row.id}
               selected={row.getIsSelected()}
               style={style}
+              sx={{
+                borderBottom: theme => `1px solid ${theme.palette.divider}`,
+                display: "flex",
+                width: table.getTotalSize(),
+                minWidth: "100%",
+                "&:hover": {
+                  bgcolor: "action.hover",
+                },
+              }}
             >
               {cells.map(cell => {
+                const columnSize = cell.column.getSize();
+
                 return (
                   <MuiTableCell
                     component="div"
                     sx={{
-                      maxWidth: cell.column.getSize(),
-                      width: cell.column.getSize(),
+                      flex: `0 0 ${columnSize}px`,
+                      maxWidth: columnSize,
+                      width: columnSize,
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
+                      display: "flex",
+                      alignItems: "center",
                     }}
                     key={cell.id}
                   >

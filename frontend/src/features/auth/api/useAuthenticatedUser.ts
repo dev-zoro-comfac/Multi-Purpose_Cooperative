@@ -14,7 +14,7 @@ export const emptyAuth = {
   permissions: [],
 };
 
-const getAuthenticatedUser = async (): Promise<AuthResponse> => {
+export const getAuthenticatedUser = async (): Promise<AuthResponse> => {
   const response = await axiosInstance.get("auth/spa/authenticate");
 
   const validatedResponse = authResponseSchema.safeParse(response.data);

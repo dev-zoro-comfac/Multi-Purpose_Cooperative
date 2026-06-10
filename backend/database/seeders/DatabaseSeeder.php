@@ -43,11 +43,13 @@ class DatabaseSeeder extends Seeder
             ],
         ];
 
+        $seedPassword = env('SEED_USER_PASSWORD', 'Test@123');
+
         foreach ($users as $userData) {
 
             $user = User::factory()->create([
                 'email' => $userData['email'],
-                'password' => Hash::make('Test@123'),
+                'password' => Hash::make($seedPassword),
             ]);
 
             $user->assignRole($userData['role']);

@@ -10,6 +10,7 @@ use App\Models\LoanApplication;
 use App\Models\LoanDocument;
 use App\Models\Member;
 use App\Models\User;
+use App\Notifications\LoanNotification;
 use App\Services\LoanAccountService;
 use App\Services\LoanCalculatorService;
 use App\Services\LoanDashboardService;
@@ -28,6 +29,14 @@ class LoanApplicationController extends Controller
         ]) ?? false;
     }
 
+    private function canUseBorrowerPortal(?User $user): bool
+    {
+        return $user?->hasAnyRole([
+            RoleEnum::Member->value,
+            RoleEnum::NonMember->value,
+        ]) ?? false;
+    }
+
     private function canAccessLoan(LoanApplication $loanApplication): bool
     {
         $user = auth()->user();
@@ -40,7 +49,7 @@ class LoanApplicationController extends Controller
             return true;
         }
 
-        if (! $user->hasRole(RoleEnum::Member->value)) {
+        if (! $this->canUseBorrowerPortal($user)) {
             return false;
         }
 
@@ -84,7 +93,7 @@ class LoanApplicationController extends Controller
         $user = auth()->user();
 
         abort_unless(
-            $this->canManageLoans($user) || $user?->hasRole(RoleEnum::Member->value),
+            $this->canManageLoans($user) || $this->canUseBorrowerPortal($user),
             403,
             'You are not allowed to view loan applications.'
         );
@@ -96,7 +105,7 @@ class LoanApplicationController extends Controller
 
         if (
             $user &&
-            $user->hasRole(RoleEnum::Member->value) &&
+            $this->canUseBorrowerPortal($user) &&
             ! $this->canManageLoans($user)
         ) {
             $query->where(function ($query) use ($user) {
@@ -132,14 +141,15 @@ class LoanApplicationController extends Controller
     public function store(
         StoreLoanApplicationRequest $request,
         LoanCalculatorService $calculatorService,
-        LoanAccountService $loanAccountService
+        LoanAccountService $loanAccountService,
+        LoanDocumentService $loanDocumentService
     ) {
         $data = $request->validated();
         $authenticatedUser = auth()->user();
 
         if (! $this->canManageLoans($authenticatedUser)) {
             abort_unless(
-                $authenticatedUser?->hasRole(RoleEnum::Member->value),
+                $this->canUseBorrowerPortal($authenticatedUser),
                 403,
                 'You are not allowed to create loan applications.'
             );
@@ -169,13 +179,16 @@ class LoanApplicationController extends Controller
 
         $calculation = $calculatorService->calculate([
             'loan_amount' => $data['amount_requested'],
-            'annual_rate' => $data['annual_rate'] ?? 15,
-            'number_of_paydays' => $data['number_of_paydays'] ?? 24,
-            'processing_fee' => $data['processing_fee'] ?? 50,
+            'annual_rate' => $data['annual_rate'] ?? config('loan.default_annual_rate'),
+            'number_of_paydays' => $data['number_of_paydays'] ?? config('loan.default_number_of_paydays'),
+            'processing_fee' => $data['processing_fee'] ?? config('loan.default_processing_fee'),
+            'payment_frequency' => $data['payment_frequency'] ?? config('loan.default_payment_frequency'),
+            'computation_method' => $data['computation_method'] ?? config('loan.default_computation_method'),
         ]);
 
         $data['annual_rate'] = $calculation['annual_rate'];
         $data['number_of_paydays'] = $calculation['number_of_paydays'];
+        $data['computation_method'] = $calculation['computation_method'];
         $data['processing_fee'] = $calculation['processing_fee'];
         $data['amortization_per_payday'] = $calculation['amortization_per_payday'];
         $data['monthly_amortization'] = $calculation['monthly_amortization'];
@@ -206,13 +219,93 @@ class LoanApplicationController extends Controller
             ]);
         }
 
+        $loan = $loanDocumentService->generateDocuments($loan);
+
+        $loan->activityLogs()->create([
+            'user_id' => auth()->id(),
+            'action' => 'documents_generated',
+            'notes' => 'Official loan documents were generated for printing and wet signature.',
+        ]);
+
         return response()->json([
             'success' => true,
-            'message' => 'Loan application created.',
+            'message' => 'Loan application created and official documents generated.',
             'data' => new LoanApplicationResource(
-                $loan->load('documents', 'amortizations')
+                $loan->load('documents', 'amortizations', 'activityLogs.user')
             ),
             'computation' => $calculation,
+        ], 201);
+    }
+
+    public function publicStore(
+        StoreLoanApplicationRequest $request,
+        LoanCalculatorService $calculatorService
+    ) {
+        $data = $request->validated();
+
+        $calculation = $calculatorService->calculate([
+            'loan_amount' => $data['amount_requested'],
+            'annual_rate' => $data['annual_rate'] ?? config('loan.default_annual_rate'),
+            'number_of_paydays' => $data['number_of_paydays'] ?? config('loan.default_number_of_paydays'),
+            'processing_fee' => $data['processing_fee'] ?? config('loan.default_processing_fee'),
+            'payment_frequency' => $data['payment_frequency'] ?? config('loan.default_payment_frequency'),
+            'computation_method' => $data['computation_method'] ?? config('loan.default_computation_method'),
+        ]);
+
+        $data['application_source'] = 'public';
+        $data['status'] = LoanApplication::STATUS_PENDING;
+        $data['loan_type'] = $data['loan_type'] ?? 'non_member';
+        $data['annual_rate'] = $calculation['annual_rate'];
+        $data['number_of_paydays'] = $calculation['number_of_paydays'];
+        $data['computation_method'] = $calculation['computation_method'];
+        $data['processing_fee'] = $calculation['processing_fee'];
+        $data['amortization_per_payday'] = $calculation['amortization_per_payday'];
+        $data['monthly_amortization'] = $calculation['monthly_amortization'];
+        $data['total_interest'] = $calculation['total_interest'];
+        $data['total_amount_payable'] = $calculation['total_amount_payable'];
+        $data['net_proceeds'] = $calculation['net_proceeds'];
+
+        $loan = LoanApplication::create($data);
+
+        $loan->update([
+            'application_no' => 'LOAN-'.str_pad($loan->id, 6, '0', STR_PAD_LEFT),
+        ]);
+
+        $loan->activityLogs()->create([
+            'user_id' => null,
+            'action' => 'public_application_submitted',
+            'notes' => 'Online public loan application received for accounting review.',
+        ]);
+
+        User::role([RoleEnum::Admin->value, RoleEnum::Accounting->value])
+            ->get()
+            ->each(fn (User $user) => $user->notify(new LoanNotification(
+                'New public loan application received from '.$loan->borrower_name.'.',
+                'public_application',
+                true,
+                [
+                    'loan_id' => $loan->id,
+                    'application_no' => $loan->application_no,
+                ]
+            )));
+
+        foreach ($calculation['schedule'] as $row) {
+            LoanAmortization::create([
+                'loan_application_id' => $loan->id,
+                'payday_no' => $row['payday_no'],
+                'amortization' => $row['amortization'],
+                'interest' => $row['interest'],
+                'principal' => $row['principal'],
+                'balance' => $row['balance'],
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Loan application submitted. Accounting will review your application.',
+            'data' => new LoanApplicationResource(
+                $loan->load('activityLogs.user', 'amortizations')
+            ),
         ], 201);
     }
 
@@ -344,16 +437,14 @@ class LoanApplicationController extends Controller
         return $loanDocumentService->downloadDocument($loanDocument);
     }
 
-    public function submitForEvaluation(LoanApplication $loanApplication)
+    public function submitForEvaluation(
+        LoanApplication $loanApplication,
+        LoanDocumentService $loanDocumentService
+    )
     {
         $this->authorizeLoanAccess($loanApplication);
 
-        $requiredDocuments = [
-            'loan_application_form',
-            'authorization_to_deduct',
-            'promissory_note',
-            'supporting_documents',
-        ];
+        $requiredDocuments = $loanDocumentService->requiredDocumentTypes($loanApplication);
 
         foreach ($requiredDocuments as $type) {
             $hasUploaded = $loanApplication->documents()
@@ -420,13 +511,65 @@ class LoanApplicationController extends Controller
         );
     }
 
-    public function review(LoanApplication $loanApplication, LoanWorkflowService $loanWorkflowService)
+    public function review(
+        LoanApplication $loanApplication,
+        LoanWorkflowService $loanWorkflowService,
+        LoanAccountService $loanAccountService
+    )
     {
         $this->authorizeLoanManager();
 
-        return $this->workflowResponse(
-            $loanWorkflowService->review($loanApplication, auth()->id())
-        );
+        $result = $loanWorkflowService->review($loanApplication, auth()->id());
+
+        if ($result['success'] ?? false) {
+            $this->createBorrowerAccountIfNeeded($loanApplication, $loanAccountService);
+        }
+
+        return $this->workflowResponse($result);
+    }
+
+    private function createBorrowerAccountIfNeeded(
+        LoanApplication $loanApplication,
+        LoanAccountService $loanAccountService
+    ): void {
+        if ($loanApplication->member_id || ! $loanApplication->borrower_email) {
+            return;
+        }
+
+        $loanData = $loanAccountService->attachBorrowerMember([
+            'borrower_name' => $loanApplication->borrower_name,
+            'borrower_email' => $loanApplication->borrower_email,
+            'borrower_contact_number' => $loanApplication->borrower_contact_number,
+            'borrower_address' => $loanApplication->borrower_address,
+            'declared_member_status' => $loanApplication->declared_member_status,
+            'loan_type' => $loanApplication->loan_type,
+        ]);
+
+        if (! empty($loanData['member_id'])) {
+            $loanApplication->update([
+                'member_id' => $loanData['member_id'],
+                'is_coop_member' => $loanData['is_coop_member'] ?? false,
+            ]);
+
+            $memberUserId = Member::find($loanData['member_id'])?->user_id;
+            $memberUser = $memberUserId ? User::find($memberUserId) : null;
+
+            $memberUser?->notify(new LoanNotification(
+                'Your borrower portal account is ready. Please check your email to set up your password.',
+                'borrower_account_created',
+                true,
+                [
+                    'loan_id' => $loanApplication->id,
+                    'application_no' => $loanApplication->application_no,
+                ]
+            ));
+
+            $loanApplication->activityLogs()->create([
+                'user_id' => auth()->id(),
+                'action' => 'account_created',
+                'notes' => 'Borrower portal account was created or linked after accounting review. A password setup email was sent if this was a new account.',
+            ]);
+        }
     }
 
     public function dashboard(LoanDashboardService $loanDashboardService)

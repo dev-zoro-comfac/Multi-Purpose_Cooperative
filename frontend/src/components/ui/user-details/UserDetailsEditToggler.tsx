@@ -24,9 +24,17 @@ const UserDetailsEditToggler = () => {
           alignItems="center"
           justifyContent="space-between"
         >
-          <Typography variant="h6">Edit Mode</Typography>
+          <Stack>
+            <Typography variant="h6" fontWeight={700}>
+              Edit Profile
+            </Typography>
 
-          <Tooltip title="Enable edit" arrow>
+            <Typography variant="body2" color="text.secondary">
+              Keep your contact and cooperative account details updated.
+            </Typography>
+          </Stack>
+
+          <Tooltip title={isEditing ? "Disable editing" : "Enable editing"} arrow>
             <Switch checked={isEditing} onChange={toggleEditing} />
           </Tooltip>
         </Stack>

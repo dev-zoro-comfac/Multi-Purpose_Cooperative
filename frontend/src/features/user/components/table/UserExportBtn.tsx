@@ -9,7 +9,7 @@ const UserExportBtn = () => {
     useExportUsers();
 
   return (
-    <Tooltip title="Export Data" arrow>
+    <Tooltip title="Export User Accounts" arrow>
       <IconButton
         color="primary"
         onClick={() => exportUser()}

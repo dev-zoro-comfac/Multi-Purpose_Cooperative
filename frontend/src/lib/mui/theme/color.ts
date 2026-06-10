@@ -43,6 +43,18 @@ const colors = {
     "#22075e",
     "#120338",
   ],
+  darkGreen: [
+    "#eef8f2",
+    "#d6eadf",
+    "#afd8c3",
+    "#82c2a2",
+    "#4f9d78",
+    "#1f6f4a",
+    "#155f3e",
+    "#0f4d33",
+    "#0a3d28",
+    "#06291b",
+  ],
   geekblue: [
     "#f0f5ff",
     "#d6e4ff",
@@ -171,6 +183,7 @@ export const contrastText = "#fff";
 export const {
   magenta,
   purple,
+  darkGreen,
   blue,
   geekblue,
   cyan,

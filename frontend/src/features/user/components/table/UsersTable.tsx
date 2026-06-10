@@ -19,13 +19,24 @@ const UsersTable = () => {
 
   return (
     <Stack sx={{ gap: 3 }}>
-      <UsersTableLoadingIndicator />
-      <Typography variant="h3">List of all Users</Typography>
+    <UsersTableLoadingIndicator />
+
+    <Stack sx={{ gap: 0.5 }}>
+      <Typography variant="h3" fontWeight={700}>
+        User Accounts
+      </Typography>
+
+    <Typography color="text.secondary">
+        Manage cooperative staff, accounting users, and member portal accounts.
+      </Typography>
+    </Stack>
       <Paper
         sx={theme => ({
           border: `1px solid ${theme.palette.divider}`,
           width: "100%",
           overflow: "hidden",
+          borderRadius: 3,
+          boxShadow: "0 8px 24px rgba(15, 23, 42, 0.06)",
         })}
         elevation={0}
       >
@@ -33,7 +44,13 @@ const UsersTable = () => {
         <MuiTableContainer
           sx={{ overflow: "auto", position: "relative", height: 715 }}
         >
-          <MuiTable sx={{ display: "grid" }} component="div">
+          <MuiTable
+            sx={{
+              display: "grid",
+              minWidth: table.getTotalSize(),
+            }}
+            component="div"
+          >
             <UsersTableHeader table={table} />
             <UsersTableBody table={table} />
           </MuiTable>

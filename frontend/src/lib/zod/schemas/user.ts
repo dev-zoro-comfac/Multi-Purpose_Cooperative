@@ -104,25 +104,25 @@ export type TEditUserPasswordSchema = z.infer<typeof EditUserPasswordSchema>;
 
 export type TUser = z.infer<typeof userSchema>;
 export const userSchema = baseUserSchema.extend({
-  profile: baseProfileSchema,
+  profile: baseProfileSchema.nullable(),
 });
 
 export type TUserWithProfileOnly = z.infer<typeof userWithProfileOnlySchema>;
 export const userWithProfileOnlySchema = baseUserSchema.extend({
-  profile: baseProfileSchema,
+  profile: baseProfileSchema.nullable(),
 });
 
 export const userOptionsSchema = responseSchema.extend({
   data: z.array(
     z.object({
-      id: z.string(),
+      id: z.coerce.string(),
       full_name: z.string(),
     })
   ),
 });
 
 export const roleSchema = z.object({
-  id: z.string(),
+  id: z.coerce.string(),
   name: z.string(),
 });
 
@@ -141,7 +141,7 @@ export type TUsersResponseSchema = z.infer<typeof usersResponseSchema>;
 export const usersResponseSchema = responseSchema.extend({
   data: z.array(
     baseUserSchema.extend({
-      profile: baseProfileSchema,
+      profile: baseProfileSchema.nullable(),
     })
   ),
 });
@@ -160,7 +160,7 @@ export const usersPaginatedResponseSchema = responseSchema.extend({
 
 export type TinfiniteUsersSchema = z.infer<typeof infiniteUsersSchema>;
 export const infiniteUsersSchema = z.object({
-  id: z.string(),
+  id: z.coerce.string(),
   full_name: z.string(),
 });
 

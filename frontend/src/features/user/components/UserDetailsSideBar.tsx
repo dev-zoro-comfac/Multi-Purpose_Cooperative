@@ -1,5 +1,5 @@
 "use client";
-import { Paper, Stack, Typography, Avatar, Box, Divider } from "@mui/material";
+import { Paper, Stack, Typography, Avatar, Box, Divider, Chip } from "@mui/material";
 import { usePathname } from "next/navigation";
 import {
   emptyResponse,
@@ -24,6 +24,7 @@ const UserDetailsSideBar = ({ userId, links }: PUserDetailsSideBar) => {
 
   const { data: { data: user } = {}, isLoading = { data: emptyResponse } } =
     useGetUserQuery(userId || "");
+  const roleNames = user?.roles?.map(role => role.name).filter(Boolean) ?? [];
 
   if (isLoading) {
     return <UserIDLayoutSkeleton />;
@@ -35,6 +36,7 @@ const UserDetailsSideBar = ({ userId, links }: PUserDetailsSideBar) => {
         height: "500px",
         boxSizing: "border-box",
         border: theme => `1px solid ${theme.palette.divider}`,
+        borderRadius: 3,
         display: "flex",
         flexDirection: "column",
         position: "sticky",
@@ -63,11 +65,34 @@ const UserDetailsSideBar = ({ userId, links }: PUserDetailsSideBar) => {
             src=""
           />
           <Box sx={{ mt: 2, textAlign: "center" }}>
-            <Typography variant="h4">
+            <Typography variant="h4" fontWeight={700}>
               {user?.profile?.first_name && user?.profile?.last_name
                 ? `${user?.profile.first_name} ${user?.profile.last_name}`
                 : ""}
             </Typography>
+
+            <Typography variant="body2" color="text.secondary">
+              {user?.id ? `USER-${String(user.id).padStart(5, "0")}` : "Member Account"}
+            </Typography>
+
+            <Stack
+              direction="row"
+              justifyContent="center"
+              flexWrap="wrap"
+              gap={0.75}
+              sx={{ mt: 1.5 }}
+            >
+              {(roleNames.length ? roleNames : ["member"]).map(role => (
+                <Chip
+                  key={role}
+                  label={formatLabel(role)}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                  sx={{ fontWeight: 700 }}
+                />
+              ))}
+            </Stack>
           </Box>
         </Box>
         <Divider />
@@ -119,5 +144,10 @@ const UserDetailsSideBar = ({ userId, links }: PUserDetailsSideBar) => {
     </Paper>
   );
 };
+
+const formatLabel = (value: string) =>
+  value
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, char => char.toUpperCase());
 
 export default UserDetailsSideBar;

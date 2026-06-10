@@ -56,8 +56,17 @@ const UserTableHead = <T,>({ header }: PUserTableHead<T>) => {
     handleFilterDebounced(newValue);
   };
 
+  const columnSize = header.getSize();
+
   return (
-    <MuiTableCell sx={{ width: header.getSize() }} component="div">
+    <MuiTableCell
+      sx={{
+        flex: `0 0 ${columnSize}px`,
+        maxWidth: columnSize,
+        width: columnSize,
+      }}
+      component="div"
+    >
       {header.isPlaceholder ? null : (
         <Stack
           sx={{

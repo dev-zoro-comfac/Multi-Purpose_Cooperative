@@ -21,10 +21,15 @@ class LoanApplication extends Model
 
     protected $fillable = [
         'application_no',
+        'application_source',
+        'declared_member_status',
+        'declared_member_no',
 
         'member_id',
         'loan_type',
         'payment_frequency',
+        'preferred_payment_method',
+        'computation_method',
         'purpose',
 
         'borrower_name',

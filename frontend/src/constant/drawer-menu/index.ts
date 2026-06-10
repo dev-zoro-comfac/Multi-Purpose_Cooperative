@@ -50,7 +50,7 @@ const dashboard: MenuGroup = {
       url: "/dashboard",
       icon: HomeOutlinedIcon,
       isUrlCheckedEndsWith: true,
-      description: "Default page",
+      description: "View cooperative dashboard summaries and quick actions",
     },
     {
       id: "user",
@@ -58,7 +58,7 @@ const dashboard: MenuGroup = {
       type: "collapse",
       url: "/dashboard/users",
       icon: PeopleOutlinedIcon,
-      description: "You can manage and view the users table here",
+      description: "Manage staff, accounting, and borrower user accounts",
       children: [
         {
           id: "user-list",
@@ -101,7 +101,7 @@ const manage: MenuGroup = {
         RolePermission.HardDelete,
       ],
       matchExactPermission: true,
-      description: "You can manage and view the roles table here",
+      description: "Manage system roles and access permissions",
     },
   ],
 };
@@ -117,7 +117,7 @@ const account: MenuGroup = {
       type: "item",
       url: "/dashboard/profile",
       icon: PersonOutlineOutlinedIcon,
-      description: "You can view your account details here",
+      description: "View and update your account details",
     },
 
     {

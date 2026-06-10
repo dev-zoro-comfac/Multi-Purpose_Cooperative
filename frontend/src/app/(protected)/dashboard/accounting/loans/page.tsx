@@ -26,9 +26,10 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   approveLoan,
-  downloadLoanDocumentUrl,
+  downloadLoanDocument,
   getLoans,
   rejectLoan,
+  reviewLoan,
 } from "@/lib/api/loan";
 
 type LoanDocument = {
@@ -44,8 +45,14 @@ type LoanActivityLog = {
 type LoanApplication = {
   id: number;
   application_no?: string | null;
+  application_source?: string | null;
+  declared_member_status?: string | null;
+  declared_member_no?: string | null;
   borrower_name?: string | null;
   amount_requested?: string | number | null;
+  preferred_payment_method?: string | null;
+  total_contribution?: string | number | null;
+  outstanding_loan_balance?: string | number | null;
   status?: string | null;
   created_at?: string | null;
   documents?: LoanDocument[];
@@ -176,6 +183,38 @@ const AccountingLoansPage = () => {
     queryClient.invalidateQueries({
       queryKey: ["loan-applications"],
     });
+  };
+
+  const handleDownloadDocument = async (documentId: number) => {
+    try {
+      await downloadLoanDocument(documentId);
+    } catch (error) {
+      console.error(error);
+      setSnackbarMessage("Unable to download document.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
+  };
+
+  const handleReview = async (loanId: number) => {
+    try {
+      setIsSubmittingAction(true);
+
+      await reviewLoan(loanId);
+
+      refreshLoans();
+      setSnackbarMessage("Loan marked as reviewed.");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+    } catch (error) {
+      setSnackbarMessage(
+        getErrorMessage(error, "Failed to mark loan as reviewed.")
+      );
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setIsSubmittingAction(false);
+    }
   };
 
   const handleApprove = async () => {
@@ -332,14 +371,21 @@ const AccountingLoansPage = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
-      <Card elevation={1} sx={{ mb: 3, borderRadius: 3 }}>
+      <Card
+        elevation={1}
+        sx={{
+          mb: 3,
+          borderRadius: 3,
+          border: theme => `1px solid ${theme.palette.divider}`,
+        }}
+      >
         <CardContent sx={{ p: 3 }}>
           <Typography variant="h3" component="h1" fontWeight={700}>
-            Loan Applications
+            Cooperative Loan Register
           </Typography>
 
           <Typography color="text.secondary" sx={{ mb: 2 }}>
-            Review submitted loan applications and supporting documents.
+            Review member loan applications, supporting documents, and accounting workflow status.
           </Typography>
 
           <TextField
@@ -353,6 +399,7 @@ const AccountingLoansPage = () => {
               mt: 2,
               "& .MuiOutlinedInput-root": {
                 borderRadius: 3,
+                bgcolor: "background.paper",
               },
             }}
           />
@@ -451,7 +498,7 @@ const AccountingLoansPage = () => {
         gap={2}
       >
         <Typography variant="h5" fontWeight={700}>
-          Loan Records
+          Member Loan Records
         </Typography>
 
         <Button
@@ -463,7 +510,7 @@ const AccountingLoansPage = () => {
           }}
           onClick={() => router.push("/dashboard/accounting/loans/create")}
         >
-          New Loan Application
+          New Loan Record
         </Button>
       </Box>
 
@@ -472,12 +519,12 @@ const AccountingLoansPage = () => {
         spacing={2}
         sx={{ mb: 3 }}
       >
-        <SummaryCard title="Total Loans" value={totalLoans} />
-        <SummaryCard title="Pending / In Progress" value={pendingLoans} />
-        <SummaryCard title="Approved" value={approvedLoans} />
-        <SummaryCard title="Rejected" value={rejectedLoans} />
+        <SummaryCard title="Loan Records" value={totalLoans} />
+        <SummaryCard title="Pending Review" value={pendingLoans} />
+        <SummaryCard title="Approved Loans" value={approvedLoans} />
+        <SummaryCard title="Rejected Loans" value={rejectedLoans} />
         <SummaryCard
-          title="Total Amount"
+          title="Total Principal Applied"
           value={`₱${totalLoanAmount.toLocaleString()}`}
         />
       </Stack>
@@ -520,9 +567,11 @@ const AccountingLoansPage = () => {
               elevation={2}
               sx={{
                 borderRadius: 3,
-                transition: "0.2s",
+                border: theme => `1px solid ${theme.palette.divider}`,
+                transition: "0.2s ease",
                 "&:hover": {
                   boxShadow: 6,
+                  borderColor: "primary.main",
                 },
               }}
             >
@@ -531,7 +580,7 @@ const AccountingLoansPage = () => {
                   direction={{ xs: "column", md: "row" }}
                   spacing={3}
                   justifyContent="space-between"
-                  alignItems="center"
+                  alignItems={{ xs: "stretch", md: "center" }}
                 >
                   <Stack direction="row" spacing={2} sx={{ flex: 1 }}>
                     <Avatar
@@ -558,13 +607,41 @@ const AccountingLoansPage = () => {
                         Borrower: <b>{loan.borrower_name || "—"}</b>
                       </Typography>
 
+                      {loan.application_source === "public" && (
+                        <Chip
+                          label={
+                            loan.declared_member_status === "member"
+                              ? `Online Member Claim${loan.declared_member_no ? `: ${loan.declared_member_no}` : ""}`
+                              : "Online New Applicant"
+                          }
+                          color="secondary"
+                          size="small"
+                          sx={{ mt: 1, mb: 1, fontWeight: 700 }}
+                        />
+                      )}
+
                       <Typography>
-                        Amount Requested:{" "}
+                        Principal Applied:{" "}
                         {formatMoney(loan.amount_requested)}
                       </Typography>
 
                       <Typography color="text.secondary">
+                        Member Contribution:{" "}
+                        {formatMoney(loan.total_contribution)}
+                      </Typography>
+
+                      <Typography color="text.secondary">
+                        Outstanding Balance:{" "}
+                        {formatMoney(loan.outstanding_loan_balance)}
+                      </Typography>
+
+                      <Typography color="text.secondary">
                         Submitted: {formatDate(loan.created_at)}
+                      </Typography>
+
+                      <Typography color="text.secondary">
+                        Payment Method:{" "}
+                        {formatStatus(loan.preferred_payment_method)}
                       </Typography>
 
                       <Typography color="text.secondary">
@@ -581,10 +658,9 @@ const AccountingLoansPage = () => {
                   <Stack
                   spacing={1.5}
                   justifyContent="center"
-                  alignItems={{ xs: "flex-start", md: "flex-end" }}
+                  alignItems={{ xs: "stretch", md: "flex-end" }}
                   sx={{
-                    minWidth: 180,
-                    height: "100%",
+                    minWidth: { md: 190 },
                   }}
                   >
                     <Chip
@@ -615,8 +691,7 @@ const AccountingLoansPage = () => {
                     {supportingDocument && (
                       <Button
                         variant="outlined"
-                        href={downloadLoanDocumentUrl(supportingDocument.id)}
-                        target="_blank"
+                        onClick={() => handleDownloadDocument(supportingDocument.id)}
                         sx={{
                           borderRadius: 2,
                           textTransform: "none",
@@ -630,10 +705,32 @@ const AccountingLoansPage = () => {
                     {(
                       loan.status === "submitted_for_evaluation" ||
                       loan.status === "pending" ||
-                      loan.status === "created"
+                      loan.status === "created" ||
+                      loan.status === "documents_uploaded"
                     ) && (
-                      <Stack direction="row" spacing={1}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                          borderRadius: 2,
+                          textTransform: "none",
+                          fontWeight: 700,
+                        }}
+                        disabled={isSubmittingAction}
+                        onClick={() => handleReview(loan.id)}
+                      >
+                        Mark as Reviewed
+                      </Button>
+                    )}
+
+                    {loan.status === "reviewed" && (
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={1}
+                        sx={{ width: { xs: "100%", md: "auto" } }}
+                      >
                         <Button
+                          fullWidth
                           variant="contained"
                           color="success"
                           sx={{
@@ -641,6 +738,7 @@ const AccountingLoansPage = () => {
                             textTransform: "none",
                             fontWeight: 600,
                           }}
+                          disabled={isSubmittingAction}
                           onClick={() => {
                             setSelectedLoanId(loan.id);
                             setApproveDialogOpen(true);
@@ -650,6 +748,7 @@ const AccountingLoansPage = () => {
                         </Button>
 
                         <Button
+                          fullWidth
                           variant="outlined"
                           color="error"
                           sx={{
@@ -657,6 +756,7 @@ const AccountingLoansPage = () => {
                             textTransform: "none",
                             fontWeight: 600,
                           }}
+                          disabled={isSubmittingAction}
                           onClick={() => {
                             setSelectedLoanId(loan.id);
                             setRejectDialogOpen(true);

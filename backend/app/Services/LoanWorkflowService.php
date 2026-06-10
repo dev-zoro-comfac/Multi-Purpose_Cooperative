@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\LoanApplication;
+use App\Models\User;
+use App\Notifications\LoanNotification;
 
 class LoanWorkflowService
 {
@@ -64,6 +66,12 @@ class LoanWorkflowService
             'notes' => 'Loan application was approved.',
         ]);
 
+        $this->notifyBorrower(
+            $loanApplication,
+            'Your loan application has been approved by accounting.',
+            'loan_approved'
+        );
+
         return [
             'success' => true,
             'message' => 'Loan application approved.',
@@ -93,6 +101,13 @@ class LoanWorkflowService
             'notes' => $notes ?: 'Loan application was rejected.',
         ]);
 
+        $this->notifyBorrower(
+            $loanApplication,
+            'Your loan application was rejected. Please check the loan details for accounting notes.',
+            'loan_rejected',
+            false
+        );
+
         return [
             'success' => true,
             'message' => 'Loan application rejected.',
@@ -121,10 +136,41 @@ class LoanWorkflowService
             'notes' => 'Loan proceeds were released to the borrower.',
         ]);
 
+        $this->notifyBorrower(
+            $loanApplication,
+            'Your loan proceeds have been released.',
+            'loan_released'
+        );
+
         return [
             'success' => true,
             'message' => 'Loan released successfully.',
             'loan' => $loanApplication,
         ];
+    }
+
+    private function notifyBorrower(
+        LoanApplication $loanApplication,
+        string $message,
+        string $type,
+        bool $success = true
+    ): void {
+        $loanApplication->loadMissing('member');
+
+        $memberUserId = $loanApplication->member?->user_id;
+
+        if (! $memberUserId) {
+            return;
+        }
+
+        User::find($memberUserId)?->notify(new LoanNotification(
+            $message,
+            $type,
+            $success,
+            [
+                'loan_id' => $loanApplication->id,
+                'application_no' => $loanApplication->application_no,
+            ]
+        ));
     }
 }

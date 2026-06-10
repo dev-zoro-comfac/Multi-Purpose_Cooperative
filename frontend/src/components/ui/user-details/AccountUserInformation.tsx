@@ -10,6 +10,7 @@ import {
   FormLabel,
   FormControl,
   Paper,
+  Chip,
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -35,6 +36,7 @@ type ViewUserDetailsProps = {
 const AccountUserInformation = ({ user }: ViewUserDetailsProps) => {
   const isEditing = useEditingStore(state => state.isEditing);
   const toggleEditing = useEditingStore(state => state.toggleEditing);
+  const roleNames = user?.roles?.map(role => role.name).filter(Boolean) ?? [];
 
   const { mutate: updateUser, isPending } = useUpdateUsersMutation();
 
@@ -88,8 +90,8 @@ const AccountUserInformation = ({ user }: ViewUserDetailsProps) => {
     <Paper
       sx={{
         border: theme => `1px solid ${theme.palette.divider}`,
-        px: 1.5,
-        py: 0.5,
+        borderRadius: 3,
+        overflow: "hidden",
       }}
       elevation={0}
     >
@@ -103,16 +105,16 @@ const AccountUserInformation = ({ user }: ViewUserDetailsProps) => {
           }}
           justifyContent="space-between"
         >
-          <Typography
-            variant="h4"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              height: "100%",
-            }}
-          >
-            Account Information
-          </Typography>
+          <Stack spacing={0.5}>
+            <Typography variant="h4" fontWeight={700}>
+              Cooperative Account Information
+            </Typography>
+
+            <Typography variant="body2" color="text.secondary">
+              Login account, assigned cooperative role, and current account
+              standing.
+            </Typography>
+          </Stack>
         </Stack>
         <Divider />
         <Grid
@@ -125,7 +127,7 @@ const AccountUserInformation = ({ user }: ViewUserDetailsProps) => {
             <Stack sx={{ gap: 2 }}>
               <FormControl>
                 <FormLabel sx={{ fontSize: 12 }} htmlFor="email">
-                  Email
+                  Login Email
                 </FormLabel>
                 <TextField
                   id="email"
@@ -142,24 +144,87 @@ const AccountUserInformation = ({ user }: ViewUserDetailsProps) => {
             <Stack sx={{ gap: 2 }}>
               <FormControl>
                 <FormLabel sx={{ fontSize: 12 }} htmlFor="roles">
-                  Roles
+                  Cooperative Role
                 </FormLabel>
                 {isEditing ? (
                   <EditRoleAutocomplete control={control} />
                 ) : (
-                  <TextField
-                    id="roles"
-                    slotProps={{ input: { readOnly: !isEditing } }}
-                    fullWidth
-                    value={
-                      user?.roles?.length
-                        ? user.roles.map(role => role.name || role).join(", ")
-                        : "No roles assigned"
-                    }
-                  />
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      px: 1.5,
+                      py: 1.25,
+                      minHeight: 56,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      flexWrap: "wrap",
+                      bgcolor: "background.default",
+                    }}
+                  >
+                    {roleNames.length ? (
+                      roleNames.map(role => (
+                        <Chip
+                          key={role}
+                          label={formatLabel(role)}
+                          color="primary"
+                          variant="outlined"
+                          size="small"
+                          sx={{ fontWeight: 700 }}
+                        />
+                      ))
+                    ) : (
+                      <Typography color="text.secondary">
+                        No roles assigned
+                      </Typography>
+                    )}
+                  </Paper>
                 )}
               </FormControl>
             </Stack>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 6 }}>
+            <FormControl fullWidth>
+              <FormLabel sx={{ fontSize: 12 }}>Account ID</FormLabel>
+              <TextField
+                fullWidth
+                value={user?.id ? `USER-${String(user.id).padStart(5, "0")}` : "—"}
+                slotProps={{ input: { readOnly: true } }}
+                helperText="Internal cooperative login account reference."
+              />
+            </FormControl>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 6 }}>
+            <FormControl fullWidth>
+              <FormLabel sx={{ fontSize: 12 }}>Account Status</FormLabel>
+              <Paper
+                variant="outlined"
+                sx={{
+                  px: 1.5,
+                  py: 1.25,
+                  minHeight: 56,
+                  display: "flex",
+                  alignItems: "center",
+                  bgcolor: "background.default",
+                }}
+              >
+                <Chip
+                  label={user?.deleted_at ? "Inactive Account" : "Active Account"}
+                  color={user?.deleted_at ? "default" : "success"}
+                  size="small"
+                  sx={{ fontWeight: 700 }}
+                />
+              </Paper>
+            </FormControl>
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <Typography variant="body2" color="text.secondary">
+              Some account information, such as cooperative role and account
+              status, may only be changed by an administrator.
+            </Typography>
           </Grid>
         </Grid>
         <Stack sx={{ p: 2 }}>
@@ -183,5 +248,10 @@ const AccountUserInformation = ({ user }: ViewUserDetailsProps) => {
     </Paper>
   );
 };
+
+const formatLabel = (value: string) =>
+  value
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, char => char.toUpperCase());
 
 export default AccountUserInformation;

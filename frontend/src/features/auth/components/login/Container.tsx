@@ -6,16 +6,16 @@ import Form from "./Form";
 const Container = () => {
   return (
     <MuiContainer
-      maxWidth="lg"
+      maxWidth={false}
       sx={{
-        p: { xs: 2, md: 4, lg: 8 },
+        p: { xs: 2, md: 4 },
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: { xs: 4, sm: 6 },
-        height: "100vh",
-        minHeight: "600px",
+        minHeight: "max(100vh, 600px)",
         overflow: "auto",
+        background:
+          "radial-gradient(circle at 20% 15%, rgba(31, 111, 74, 0.16), transparent 28%), radial-gradient(circle at 80% 85%, rgba(31, 111, 74, 0.12), transparent 30%), #f7faf8",
       }}
     >
       <Form />

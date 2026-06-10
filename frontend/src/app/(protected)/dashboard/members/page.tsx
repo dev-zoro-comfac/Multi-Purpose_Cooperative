@@ -112,6 +112,13 @@ const authUser = authResponse?.data;
     (member) => member.status === "active" || !member.status
   ).length;
 
+  const loginAccounts = members.filter((member) => member.user_id).length;
+
+  const totalShareCapital = members.reduce(
+    (sum, member) => sum + Number(member.share_capital || 0),
+    0
+  );
+
   const totalContribution = members.reduce(
     (sum, member) => sum + Number(member.total_contribution || 0),
     0
@@ -229,11 +236,12 @@ const authUser = authResponse?.data;
           >
             <Box>
               <Typography variant="h3" fontWeight={700}>
-                Members
+                Member Registry
               </Typography>
 
               <Typography color="text.secondary"> 
-                Manage cooperative member records and contributions.
+                Manage cooperative members, share capital, contributions, and
+                login setup status.
               </Typography>
             </Box>
 
@@ -247,7 +255,7 @@ const authUser = authResponse?.data;
                 alignSelf: { xs: "stretch", md: "center" },
               }}
             >
-              Add Member
+              Add Member Record
             </Button>
           </Stack>
 
@@ -258,22 +266,32 @@ const authUser = authResponse?.data;
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             sx={{
-              mt: 3,
+              mt: 2.5,
               "& .MuiOutlinedInput-root": {
                 borderRadius: 3,
+                bgcolor: "background.paper",
               },
             }}
           />
         </CardContent>
       </Card>
 
-      <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ mb: 3 }}>
-        <SummaryCard title="Total Members" value={members.length} />
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        spacing={2}
+        sx={{ mb: 3, flexWrap: "wrap" }}
+      >
+        <SummaryCard title="Registered Members" value={members.length} />
         <SummaryCard title="Active Members" value={activeMembers} />
+        <SummaryCard
+          title="Total Share Capital"
+          value={formatMoney(totalShareCapital)}
+        />
         <SummaryCard
           title="Total Contributions"
           value={formatMoney(totalContribution)}
         />
+        <SummaryCard title="Login Accounts" value={loginAccounts} />
       </Stack>
 
       {filteredMembers.length === 0 ? (
@@ -296,9 +314,11 @@ const authUser = authResponse?.data;
               elevation={2}
               sx={{
                 borderRadius: 3,
-                transition: "0.2s",
+                border: theme => `1px solid ${theme.palette.divider}`,
+                transition: "0.2s ease",
                 "&:hover": {
                   boxShadow: 6,
+                  borderColor: "primary.main",
                 },
               }}
             >
@@ -331,23 +351,29 @@ const authUser = authResponse?.data;
                       </Typography>
 
                       <Typography color="text.secondary">
-                        {member.department || "No department"} •{" "}
-                        {member.position || "No position"}
+                        Membership Unit: {member.department || "No department"}
                       </Typography>
 
                       <Typography color="text.secondary">
-                        {member.email || "No email"} •{" "}
+                        Position: {member.position || "No position"}
+                      </Typography>
+
+                      <Typography color="text.secondary">
+                        Contact: {member.email || "No email"} •{" "}
                         {member.contact_number || "No contact number"}
                       </Typography>
                     </Box>
                   </Stack>
 
                   <Stack
-                    spacing={1}
+                    spacing={1.25}
                     alignItems={{ xs: "flex-start", md: "flex-end" }}
+                    sx={{
+                      minWidth: { md: 180 },
+                    }}
                   >
                     <Chip
-                      label={formatStatus(member.status)}
+                      label={`Membership: ${formatStatus(member.status)}`}
                       color={
                         member.status === "inactive" ? "default" : "success"
                       }
@@ -358,7 +384,9 @@ const authUser = authResponse?.data;
                     />
 
                     <Chip
-                      label={member.user_id ? "Login account" : "No login account"}
+                      label={
+                        member.user_id ? "Portal account ready" : "No portal account"
+                      }
                       color={member.user_id ? "primary" : "default"}
                       variant="outlined"
                       sx={{
@@ -367,15 +395,23 @@ const authUser = authResponse?.data;
                       }}
                     />
 
-                    <Typography>
-                      Share Capital:{" "}
-                      <b>{formatMoney(member.share_capital)}</b>
-                    </Typography>
+                    <Box sx={{ textAlign: { xs: "left", md: "right" } }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Share Capital
+                      </Typography>
+                      <Typography fontWeight={700}>
+                        {formatMoney(member.share_capital)}
+                      </Typography>
+                    </Box>
 
-                    <Typography>
-                      Contribution:{" "}
-                      <b>{formatMoney(member.total_contribution)}</b>
-                    </Typography>
+                    <Box sx={{ textAlign: { xs: "left", md: "right" } }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Total Contribution
+                      </Typography>
+                      <Typography fontWeight={700}>
+                        {formatMoney(member.total_contribution)}
+                      </Typography>
+                    </Box>
 
                     <Button
                       variant="outlined"
@@ -596,7 +632,14 @@ const SummaryCard = ({
   value: string | number;
 }) => {
   return (
-    <Card elevation={2} sx={{ flex: 1, borderRadius: 3 }}>
+    <Card
+      elevation={2}
+      sx={{
+        flex: "1 1 180px",
+        borderRadius: 3,
+        border: theme => `1px solid ${theme.palette.divider}`,
+      }}
+    >
       <CardContent sx={{ p: 3 }}>
         <Typography color="text.secondary" fontWeight={600}>
           {title}

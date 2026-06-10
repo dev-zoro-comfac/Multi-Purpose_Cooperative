@@ -1,10 +1,9 @@
 import axiosLib from "axios";
 import { echo } from "@laravel/echo-react";
+import { getBackendApiUrl } from "./get-backend-api-url";
 
 const axiosInstance = axiosLib.create({
- baseURL:
-  process.env.NEXT_PUBLIC_BACKEND_API_URL ||
-  "http://localhost:8000/api/v1",
+  baseURL: getBackendApiUrl(),
   headers: {
     "X-Requested-With": "XMLHttpRequest",
     Accept: "application/json",

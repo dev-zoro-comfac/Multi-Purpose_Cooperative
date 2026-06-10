@@ -6,7 +6,9 @@ use App\Enums\RoleEnum;
 use App\Models\Member;
 use App\Models\Profile;
 use App\Models\User;
+use App\Notifications\MemberAccountCreatedNotification;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 
@@ -27,19 +29,31 @@ class LoanAccountService
             ]
         );
 
-        if (! $user->hasRole(RoleEnum::Member->value)) {
-            $user->assignRole(RoleEnum::Member->value);
-        }
+        $borrowerRole = $this->borrowerRole($loanData);
 
-        if ($user->wasRecentlyCreated) {
-            Password::sendResetLink([
-                'email' => $user->email,
-            ]);
+        if (! $user->hasRole($borrowerRole->value)) {
+            $user->assignRole($borrowerRole->value);
         }
 
         [$firstName, $lastName] = $this->splitBorrowerName(
             $loanData['borrower_name'] ?? null
         );
+
+        if ($user->wasRecentlyCreated) {
+            try {
+                $token = Password::broker()->createToken($user);
+
+                $user->notify(new MemberAccountCreatedNotification(
+                    $token,
+                    trim("{$firstName} {$lastName}")
+                ));
+            } catch (\Throwable $exception) {
+                Log::warning('Borrower portal account email could not be sent.', [
+                    'email' => $user->email,
+                    'message' => $exception->getMessage(),
+                ]);
+            }
+        }
 
         if (! $user->profile) {
             $user->profile()->save(Profile::factory()->make([
@@ -67,9 +81,21 @@ class LoanAccountService
         );
 
         $loanData['member_id'] = $member->id;
-        $loanData['is_coop_member'] = true;
+        $loanData['is_coop_member'] = $borrowerRole === RoleEnum::Member;
 
         return $loanData;
+    }
+
+    private function borrowerRole(array $loanData): RoleEnum
+    {
+        $declaredMemberStatus = $loanData['declared_member_status'] ?? null;
+        $loanType = $loanData['loan_type'] ?? null;
+
+        if ($declaredMemberStatus === 'new_applicant' || $loanType === 'non_member') {
+            return RoleEnum::NonMember;
+        }
+
+        return RoleEnum::Member;
     }
 
     private function splitBorrowerName(?string $borrowerName): array

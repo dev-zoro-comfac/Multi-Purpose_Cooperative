@@ -11,6 +11,12 @@
             color: #222;
         }
 
+        .document-logo {
+            display: block;
+            width: 150px;
+            margin: 0 auto 10px;
+        }
+
         h1 {
             font-size: 20px;
             margin-bottom: 4px;
@@ -50,6 +56,8 @@
     </style>
 </head>
 <body>
+    <img class="document-logo" src="{{ public_path('images/cornersteel-logo.png') }}" alt="Cornersteel Cooperative">
+
     <h1>Loan Application</h1>
     <div class="muted">{{ $loan->application_no }}</div>
 
@@ -60,8 +68,15 @@
     <div class="row"><span class="label">Civil Status:</span> {{ $loan->borrower_civil_status ?? '—' }}</div>
     <div class="row"><span class="label">Employer:</span> {{ $loan->borrower_employer ?? '—' }}</div>
 
-    <h2>Loan Information</h2>
+    <h2>Credit Committee Computation</h2>
     <div class="row"><span class="label">Amount Requested:</span> ₱{{ number_format((float) $loan->amount_requested, 2) }}</div>
+    <div class="row"><span class="label">Interest Rate:</span> {{ $loan->annual_rate ?? 0 }}%</div>
+    <div class="row"><span class="label">Payment Frequency:</span> {{ str_replace('_', ' ', $loan->payment_frequency ?? '—') }}</div>
+    <div class="row"><span class="label">Preferred Payment Method:</span> {{ str_replace('_', ' ', $loan->preferred_payment_method ?? '—') }}</div>
+    <div class="row"><span class="label">Number of Paydays:</span> {{ $loan->number_of_paydays ?? '—' }}</div>
+    <div class="row"><span class="label">Amortization Per Pay Period:</span> ₱{{ number_format((float) ($loan->amortization_per_payday ?? 0), 2) }}</div>
+    <div class="row"><span class="label">Total Amount Payable:</span> ₱{{ number_format((float) ($loan->total_amount_payable ?? 0), 2) }}</div>
+    <div class="row"><span class="label">Net Proceeds:</span> ₱{{ number_format((float) ($loan->net_proceeds ?? 0), 2) }}</div>
     <div class="row"><span class="label">Status:</span> <span class="status">{{ str_replace('_', ' ', $loan->status) }}</span></div>
     <div class="row"><span class="label">Submitted At:</span> {{ optional($loan->submitted_at)->format('M d, Y h:i A') ?? '—' }}</div>
     <div class="row"><span class="label">Approved At:</span> {{ optional($loan->approved_at)->format('M d, Y h:i A') ?? '—' }}</div>

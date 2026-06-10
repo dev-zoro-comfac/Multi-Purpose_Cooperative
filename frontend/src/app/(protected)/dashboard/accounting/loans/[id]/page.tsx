@@ -13,6 +13,7 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  Grid,
   Snackbar,
   Stack,
   TextField,
@@ -27,7 +28,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   approveLoan,
-  downloadLoanDocumentUrl,
+  downloadAmortizationSchedule,
+  downloadLoanDocument,
   getLoan,
   rejectLoan,
 } from "@/lib/api/loan";
@@ -37,6 +39,8 @@ type LoanDocument = {
   document_type?: string | null;
   file_name?: string | null;
   name?: string | null;
+  status?: string | null;
+  is_signed?: boolean | null;
 };
 
 type LoanAmortization = {
@@ -62,10 +66,18 @@ type LoanActivityLog = {
 type LoanApplication = {
   id: number;
   application_no?: string | null;
+  application_source?: string | null;
+  declared_member_status?: string | null;
+  declared_member_no?: string | null;
   borrower_name?: string | null;
   borrower_email?: string | null;
   borrower_contact_number?: string | null;
   borrower_address?: string | null;
+  borrower_age?: string | number | null;
+  borrower_civil_status?: string | null;
+  take_home_pay_15?: string | number | null;
+  take_home_pay_30?: string | number | null;
+  member_since?: string | null;
 
   borrower_employer?: string | null;
   borrower_position?: string | null;
@@ -75,6 +87,8 @@ type LoanApplication = {
   co_maker_email?: string | null;
   co_maker_contact_number?: string | null;
   co_maker_address?: string | null;
+  co_maker_age?: string | number | null;
+  co_maker_civil_status?: string | null;
 
   co_maker_employer?: string | null;
   co_maker_length_of_service?: string | null;
@@ -88,12 +102,23 @@ type LoanApplication = {
   processing_fee?: string | number | null;
   total_contribution?: string | number | null;
   outstanding_loan_balance?: string | number | null;
+  amortization_per_payday?: string | number | null;
+  monthly_amortization?: string | number | null;
+  total_amount_payable?: string | number | null;
+  net_proceeds?: string | number | null;
 
   purpose?: string | null;
-  term?: string | number | null;
   payment_frequency?: string | null;
+  preferred_payment_method?: string | null;
+  computation_method?: string | null;
   accounting_notes?: string | null;
   created_at?: string | null;
+  submitted_at?: string | null;
+  reviewed_at?: string | null;
+  approved_at?: string | null;
+  released_at?: string | null;
+  reviewed_by?: string | number | null;
+  approved_by?: string | number | null;
   status?: string | null;
 
   documents?: LoanDocument[];
@@ -248,6 +273,26 @@ const AccountingLoanDetailsPage = () => {
   const documents = loan.documents ?? [];
   const amortizations = loan.amortizations ?? [];
 
+  const handleDownloadDocument = async (document: LoanDocument) => {
+    try {
+      await downloadLoanDocument(
+        document.id,
+        document.file_name ?? document.name ?? "loan-document.pdf"
+      );
+    } catch (error) {
+      console.error(error);
+      alert("Unable to download document. Please make sure you are logged in.");
+    }
+  };
+
+  const handleDownloadAmortizationSchedule = () => {
+    downloadAmortizationSchedule({
+      applicationNo: loan.application_no || `loan-${loan.id}`,
+      borrowerName: loan.borrower_name,
+      schedule: amortizations,
+    });
+  };
+
   return (
     <Container
   maxWidth="xl"
@@ -299,141 +344,131 @@ const AccountingLoanDetailsPage = () => {
             }}
           />
 
-          <Box sx={{ mt: 3 }}>
-  <Typography
-    variant="subtitle2"
-    color="text.secondary"
-    sx={{ mb: 1 }}
-  >
-    Loan Progress
-  </Typography>
-
-  <Stack direction="row" spacing={1} flexWrap="wrap">
-  <Chip
-    label="Documents Generated"
-    color={
-      [
-        "documents_generated",
-        "documents_uploaded",
-        "submitted_for_evaluation",
-        "reviewed",
-        "approved",
-        "released",
-      ].includes(String(loan.status))
-        ? "success"
-        : "default"
-    }
-  />
-
-  <Chip
-    label="Documents Uploaded"
-    color={
-      [
-        "documents_uploaded",
-        "submitted_for_evaluation",
-        "reviewed",
-        "approved",
-        "released",
-      ].includes(String(loan.status))
-        ? "success"
-        : "default"
-    }
-  />
-
-  <Chip
-    label="For Evaluation"
-    color={
-      [
-        "submitted_for_evaluation",
-        "reviewed",
-        "approved",
-        "released",
-      ].includes(String(loan.status))
-        ? "success"
-        : "default"
-    }
-  />
-
-  <Chip
-    label="Reviewed"
-    color={
-      ["reviewed", "approved", "released"].includes(
-        String(loan.status)
-      )
-        ? "success"
-        : "default"
-    }
-  />
-
-  <Chip
-    label="Approved"
-    color={
-      ["approved", "released"].includes(
-        String(loan.status)
-      )
-        ? "success"
-        : "default"
-    }
-  />
-
-  <Chip
-    label="Released"
-    color={
-      loan.status === "released"
-        ? "success"
-        : "default"
-    }
-  />
-</Stack>
-</Box>
-
-<Box sx={{ mt: 4 }}>
-  <Typography
-    variant="h6"
-    fontWeight={700}
-    gutterBottom
-  >
-    Activity Logs
-  </Typography>
-
-{loan.activity_logs?.length ? (
-  <Stack spacing={2}>
-    {loan.activity_logs.map((log) => (
-      <Card
-        key={log.id}
-        variant="outlined"
-        sx={{
-          borderRadius: 3,
-        }}
-      >
-        <CardContent>
-          <Typography fontWeight={600}>
-            {log.notes || "No notes"}
-          </Typography>
-
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mt: 1 }}
-          >
-            Activity recorded in the system.
-          </Typography>
-        </CardContent>
-      </Card>
-    ))}
-  </Stack>
-) : (
-  <Typography color="text.secondary">
-    No activity logs yet.
-  </Typography>
-)}
-</Box>
-
         </Stack>
       </Box>
 
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <LoanSummaryCard
+            label="Principal Applied"
+            value={formatMoney(loan.amount_requested)}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <LoanSummaryCard
+            label="Member Contribution"
+            value={formatMoney(loan.total_contribution)}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <LoanSummaryCard
+            label="Outstanding Balance"
+            value={formatMoney(loan.outstanding_loan_balance)}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <LoanSummaryCard
+            label="Current Status"
+            value={formatStatus(loan.status)}
+          />
+        </Grid>
+      </Grid>
+
       <Stack spacing={3}>
-        <Card elevation={2} sx={{ borderRadius: 3 }}>
+        <Card
+          elevation={2}
+          sx={{
+            borderRadius: 3,
+            border: theme => `1px solid ${theme.palette.divider}`,
+          }}
+        >
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h5" component="h2" fontWeight={700} sx={{ mb: 2 }}>
+              Loan Progress
+            </Typography>
+
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Chip
+                label="Submitted"
+                color={
+                  [
+                    "documents_generated",
+                    "documents_uploaded",
+                    "submitted_for_evaluation",
+                    "reviewed",
+                    "approved",
+                    "released",
+                  ].includes(String(loan.status))
+                    ? "success"
+                    : "default"
+                }
+              />
+
+              <Chip
+                label="Documents Uploaded"
+                color={
+                  [
+                    "documents_uploaded",
+                    "submitted_for_evaluation",
+                    "reviewed",
+                    "approved",
+                    "released",
+                  ].includes(String(loan.status))
+                    ? "success"
+                    : "default"
+                }
+              />
+
+              <Chip
+                label="Checked by Credit Committee"
+                color={
+                  [
+                    "submitted_for_evaluation",
+                    "reviewed",
+                    "approved",
+                    "released",
+                  ].includes(String(loan.status))
+                    ? "success"
+                    : "default"
+                }
+              />
+
+              <Chip
+                label="Verified"
+                color={
+                  ["reviewed", "approved", "released"].includes(String(loan.status))
+                    ? "success"
+                    : "default"
+                }
+              />
+
+              <Chip
+                label="Approved"
+                color={
+                  ["approved", "released"].includes(String(loan.status))
+                    ? "success"
+                    : "default"
+                }
+              />
+
+              <Chip
+                label="For Release / Released"
+                color={loan.status === "released" ? "success" : "default"}
+              />
+            </Stack>
+          </CardContent>
+        </Card>
+
+        <Card
+          elevation={2}
+          sx={{
+            borderRadius: 3,
+            border: theme => `1px solid ${theme.palette.divider}`,
+          }}
+        >
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h5" component="h2" fontWeight={700} sx={{ mb: 2 }}>
               Borrower Information
@@ -442,6 +477,11 @@ const AccountingLoanDetailsPage = () => {
             <Info label="Borrower Name" value={loan.borrower_name} />
             <Info label="Email" value={loan.borrower_email} />
             <Info label="Contact Number" value={loan.borrower_contact_number} />
+            <Info label="Age" value={loan.borrower_age} />
+            <Info
+              label="Civil Status"
+              value={formatOptionalStatus(loan.borrower_civil_status)}
+            />
             <Info label="Address" value={loan.borrower_address} />
             <Info
   label="Employer"
@@ -457,10 +497,28 @@ const AccountingLoanDetailsPage = () => {
   label="Length of Service"
   value={loan.borrower_length_of_service}
 />
+            <Info
+              label="Take Home Pay - 15th"
+              value={formatMoney(loan.take_home_pay_15)}
+            />
+            <Info
+              label="Take Home Pay - 30th"
+              value={formatMoney(loan.take_home_pay_30)}
+            />
+            <Info
+              label="Coop Member Since"
+              value={formatDate(loan.member_since)}
+            />
           </CardContent>
         </Card>
 
-        <Card elevation={2} sx={{ borderRadius: 3 }}>
+        <Card
+          elevation={2}
+          sx={{
+            borderRadius: 3,
+            border: theme => `1px solid ${theme.palette.divider}`,
+          }}
+        >
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h5" component="h2" fontWeight={700} sx={{ mb: 2 }}>
               Co-maker Information
@@ -470,6 +528,11 @@ const AccountingLoanDetailsPage = () => {
             <Info label="Email" value={loan.co_maker_email} />
             <Info label="Contact Number" value={loan.co_maker_contact_number} />
             <Info label="Address" value={loan.co_maker_address} />
+            <Info label="Age" value={loan.co_maker_age} />
+            <Info
+              label="Civil Status"
+              value={formatOptionalStatus(loan.co_maker_civil_status)}
+            />
             <Info label="Employer" value={loan.co_maker_employer} />
             <Info
               label="Length of Service"
@@ -478,13 +541,44 @@ const AccountingLoanDetailsPage = () => {
           </CardContent>
         </Card>
 
-        <Card elevation={2} sx={{ borderRadius: 3 }}>
+        <Card
+          elevation={2}
+          sx={{
+            borderRadius: 3,
+            border: theme => `1px solid ${theme.palette.divider}`,
+          }}
+        >
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h5" component="h2" fontWeight={700} sx={{ mb: 2 }}>
-              Loan Information
+              Credit Committee Computation
             </Typography>
 
-            <Info label="Amount Requested" value={formatMoney(loan.amount_requested)} />
+            <Info
+              label="Amount of Loan Application"
+              value={formatMoney(loan.amount_requested)}
+            />
+            <Info
+              label="Application Source"
+              value={
+                loan.application_source === "public"
+                  ? "Online Public Application"
+                  : "Dashboard Encoding"
+              }
+            />
+            <Info
+              label="Declared Membership"
+              value={
+                loan.declared_member_status === "member"
+                  ? "Existing member for verification"
+                  : loan.declared_member_status === "new_applicant"
+                  ? "New applicant / non-member"
+                  : "—"
+              }
+            />
+            <Info
+              label="Declared Member No."
+              value={loan.declared_member_no}
+            />
             <Info
   label="Loan Type"
   value={formatStatus(loan.loan_type)}
@@ -493,6 +587,16 @@ const AccountingLoanDetailsPage = () => {
 <Info
   label="Interest Rate"
   value={`${loan.annual_rate || 0}%`}
+/>
+
+<Info
+  label="Computation Method"
+  value={formatStatus(loan.computation_method)}
+/>
+
+<Info
+  label="Preferred Payment Method"
+  value={formatStatus(loan.preferred_payment_method)}
 />
 
 <Info
@@ -506,32 +610,144 @@ const AccountingLoanDetailsPage = () => {
 />
 
 <Info
-  label="Total Contribution"
+  label="Total Contribution as of Date"
   value={formatMoney(loan.total_contribution)}
 />
 
 <Info
-  label="Outstanding Loan Balance"
+  label="Outstanding Cooperative Loan as of Date"
   value={formatMoney(loan.outstanding_loan_balance)}
 />
+            <Info
+              label="Amount of Loan Approved"
+              value={formatMoney(loan.amount_requested)}
+            />
+            <Info
+              label="Total Amount Payable"
+              value={formatMoney(loan.total_amount_payable)}
+            />
+            <Info
+              label="Amortization Per Pay Day"
+              value={formatMoney(loan.amortization_per_payday)}
+            />
+            <Info label="Net Proceeds" value={formatMoney(loan.net_proceeds)} />
             <Info label="Purpose" value={loan.purpose} />
-            <Info label="Term" value={loan.term} />
-            <Info label="Payment Frequency" value={loan.payment_frequency} />
+            <Info
+              label="Term"
+              value={`${loan.number_of_paydays || "—"} ${formatStatus(
+                loan.payment_frequency
+              ).toLowerCase()} payments`}
+            />
+            <Info
+              label="Payment Frequency"
+              value={formatStatus(loan.payment_frequency)}
+            />
             <Info label="Submitted Date" value={formatDate(loan.created_at)} />
             <Info label="Accounting Notes" value={loan.accounting_notes} />
           </CardContent>
         </Card>
 
-        <Card elevation={2} sx={{ borderRadius: 3 }}>
+        <Card
+          elevation={2}
+          sx={{
+            borderRadius: 3,
+            border: theme => `1px solid ${theme.palette.divider}`,
+          }}
+        >
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h5" component="h2" fontWeight={700} sx={{ mb: 2 }}>
-              Documents
+              Payment Agreement / Promissory Note
             </Typography>
 
-            {documents.length === 0 ? (
-              <Typography color="text.secondary">
-                No documents uploaded.
+            <Typography color="text.secondary" sx={{ mb: 2 }}>
+              Simple generated preview for checking before the borrower prints,
+              signs, and uploads the wet-signed PDF copies.
+            </Typography>
+
+            <Stack spacing={1.25}>
+              {loan.preferred_payment_method === "salary_deduction" ? (
+                <Typography>
+                  I, <b>{loan.borrower_name || "Borrower Name"}</b>, authorize the
+                  cooperative to deduct{" "}
+                  <b>{formatMoney(loan.amortization_per_payday)}</b> every{" "}
+                  {formatStatus(loan.payment_frequency).toLowerCase()} pay day
+                  until the loan is fully paid.
+                </Typography>
+              ) : (
+                <Typography>
+                  I, <b>{loan.borrower_name || "Borrower Name"}</b>, selected{" "}
+                  <b>{formatStatus(loan.preferred_payment_method)}</b>. Accounting
+                  will verify actual payments through office receipt or proof of
+                  online transfer.
+                </Typography>
+              )}
+
+              <Typography>
+                Total loan amount payable is{" "}
+                <b>{formatMoney(loan.total_amount_payable)}</b>. Co-maker{" "}
+                <b>{loan.co_maker_name || "Co-maker Name"}</b> acknowledges the
+                loan obligation as required by the cooperative process.
               </Typography>
+
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                  gap: 3,
+                  mt: 2,
+                }}
+              >
+                <SignatureLine label="Borrower Signature" />
+                <SignatureLine label="Co-maker Signature" />
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
+
+        <Card
+          elevation={2}
+          sx={{
+            borderRadius: 3,
+            border: theme => `1px solid ${theme.palette.divider}`,
+          }}
+        >
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h5" component="h2" fontWeight={700} sx={{ mb: 2 }}>
+              Verification and Approval
+            </Typography>
+
+            <Info label="Checked By" value={loan.reviewed_by} />
+            <Info label="Date Checked" value={formatDateTime(loan.reviewed_at)} />
+            <Info label="Verified By" value={loan.reviewed_by} />
+            <Info label="Approved By" value={loan.approved_by} />
+            <Info label="Date Approved" value={formatDateTime(loan.approved_at)} />
+            <Info label="Released Date" value={formatDateTime(loan.released_at)} />
+          </CardContent>
+        </Card>
+
+        <Card
+          elevation={2}
+          sx={{
+            borderRadius: 3,
+            border: theme => `1px solid ${theme.palette.divider}`,
+          }}
+        >
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h5" component="h2" fontWeight={700} sx={{ mb: 2 }}>
+              Signed Loan Documents
+            </Typography>
+
+            {loan.preferred_payment_method !== "salary_deduction" && (
+              <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
+                Authorization to Deduct is only required for salary deduction.
+                This loan uses {formatStatus(loan.preferred_payment_method)}, so
+                accounting can verify payment manually or through proof of
+                online transfer.
+              </Alert>
+            )}
+
+            {documents.length === 0 ? (
+              <EmptyState message="No generated or signed loan documents available yet." />
             ) : (
               <Stack spacing={2}>
                 {documents.map((document) => (
@@ -556,13 +772,23 @@ const AccountingLoanDetailsPage = () => {
                       <Typography variant="body2" color="text.secondary">
                         {document.file_name ?? document.name ?? "Uploaded file"}
                       </Typography>
+
+                      <Chip
+                        label={
+                          document.is_signed
+                            ? "Wet-signed copy uploaded"
+                            : "Generated form for signature"
+                        }
+                        color={document.is_signed ? "success" : "warning"}
+                        size="small"
+                        sx={{ mt: 1, fontWeight: 700 }}
+                      />
                     </Box>
 
                     <Stack direction="row" spacing={1}>
                       <Button
                         variant="outlined"
-                        href={downloadLoanDocumentUrl(document.id)}
-                        target="_blank"
+                        onClick={() => handleDownloadDocument(document)}
                         sx={{
                           borderRadius: 2,
                           textTransform: "none",
@@ -575,8 +801,7 @@ const AccountingLoanDetailsPage = () => {
                       <Button
                         variant="contained"
                         startIcon={<DownloadIcon />}
-                        href={downloadLoanDocumentUrl(document.id)}
-                        target="_blank"
+                        onClick={() => handleDownloadDocument(document)}
                         sx={{
                           borderRadius: 2,
                           textTransform: "none",
@@ -593,7 +818,13 @@ const AccountingLoanDetailsPage = () => {
           </CardContent>
         </Card>
 
-        <Card elevation={2} sx={{ borderRadius: 3 }}>
+        <Card
+          elevation={2}
+          sx={{
+            borderRadius: 3,
+            border: theme => `1px solid ${theme.palette.divider}`,
+          }}
+        >
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h5" component="h2" fontWeight={700} sx={{ mb: 2 }}>
               Accounting Actions
@@ -603,6 +834,7 @@ const AccountingLoanDetailsPage = () => {
 
             {loan.status === "submitted_for_evaluation" ? (
               <Button
+                fullWidth
                 variant="contained"
                 color="primary"
                 onClick={handleReview}
@@ -616,8 +848,9 @@ const AccountingLoanDetailsPage = () => {
                 {isSubmittingAction ? "Reviewing..." : "Mark as Reviewed"}
               </Button>
             ) : loan.status === "reviewed" ? (
-              <Stack direction="row" spacing={1}>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
                 <Button
+                  fullWidth
                   variant="contained"
                   color="success"
                   onClick={handleApprove}
@@ -632,6 +865,7 @@ const AccountingLoanDetailsPage = () => {
                 </Button>
 
                 <Button
+                  fullWidth
                   variant="contained"
                   color="error"
                   onClick={() => setRejectDialogOpen(true)}
@@ -647,6 +881,7 @@ const AccountingLoanDetailsPage = () => {
               </Stack>
             ) : loan.status === "approved" ? (
               <Button
+                fullWidth
                 variant="contained"
                 color="success"
                 onClick={handleRelease}
@@ -660,23 +895,54 @@ const AccountingLoanDetailsPage = () => {
                 {isSubmittingAction ? "Releasing..." : "Release Loan"}
               </Button>
             ) : (
-              <Typography color="text.secondary">
-                No actions available for this loan status.
-              </Typography>
+              <EmptyState message="No actions available for this loan status." />
             )}
           </CardContent>
         </Card>
 
-        <Card elevation={2} sx={{ borderRadius: 3 }}>
+        <Card
+          elevation={2}
+          sx={{
+            borderRadius: 3,
+            border: theme => `1px solid ${theme.palette.divider}`,
+          }}
+        >
           <CardContent sx={{ p: 3 }}>
-            <Typography variant="h5" component="h2" fontWeight={700} sx={{ mb: 2 }}>
-              Amortization Schedule
-            </Typography>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="space-between"
+              sx={{ mb: 2 }}
+            >
+              <Typography variant="h5" component="h2" fontWeight={700}>
+                Amortization Schedule
+              </Typography>
+
+              <Button
+                variant="outlined"
+                startIcon={<DownloadIcon />}
+                disabled={amortizations.length === 0}
+                onClick={handleDownloadAmortizationSchedule}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: "none",
+                  fontWeight: 700,
+                }}
+              >
+                Download Schedule
+              </Button>
+            </Stack>
+
+            <Alert severity="info" variant="outlined" sx={{ mb: 2 }}>
+              In diminishing balance, the deduction amount can stay fixed, but
+              the interest and principal split changes every payday. Interest is
+              computed from the remaining balance, so it decreases as principal
+              is paid.
+            </Alert>
 
             {amortizations.length === 0 ? (
-              <Typography color="text.secondary">
-                No amortization schedule available.
-              </Typography>
+              <EmptyState message="No amortization schedule available." />
             ) : (
               <Box
                 sx={{
@@ -697,10 +963,10 @@ const AccountingLoanDetailsPage = () => {
                   <thead>
                     <tr>
                       <TableHeader>Payday No.</TableHeader>
-                      <TableHeader>Amortization</TableHeader>
-                      <TableHeader>Interest</TableHeader>
-                      <TableHeader>Principal</TableHeader>
-                      <TableHeader>Balance</TableHeader>
+                      <TableHeader>Deduction / Amortization</TableHeader>
+                      <TableHeader>Interest Portion</TableHeader>
+                      <TableHeader>Principal Portion</TableHeader>
+                      <TableHeader>Remaining Balance</TableHeader>
                     </tr>
                   </thead>
 
@@ -743,7 +1009,13 @@ const AccountingLoanDetailsPage = () => {
           </CardContent>
         </Card>
 
-        <Card elevation={2} sx={{ borderRadius: 3 }}>
+        <Card
+          elevation={2}
+          sx={{
+            borderRadius: 3,
+            border: theme => `1px solid ${theme.palette.divider}`,
+          }}
+        >
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h5" component="h2" fontWeight={700} gutterBottom>
               Activity Logs
@@ -799,9 +1071,7 @@ const AccountingLoanDetailsPage = () => {
                     </Box>
                   ))
               ) : (
-                <Typography color="text.secondary">
-                  No activity logs yet.
-                </Typography>
+                <EmptyState message="No activity logs yet." />
               )}
             </Stack>
           </CardContent>
@@ -874,6 +1144,46 @@ const AccountingLoanDetailsPage = () => {
   );
 };
 
+const EmptyState = ({ message }: { message: string }) => (
+  <Box
+    sx={{
+      p: 2,
+      borderRadius: 2,
+      bgcolor: "background.default",
+      border: theme => `1px dashed ${theme.palette.divider}`,
+    }}
+  >
+    <Typography color="text.secondary">{message}</Typography>
+  </Box>
+);
+
+const LoanSummaryCard = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number;
+}) => (
+  <Card
+    elevation={2}
+    sx={{
+      height: "100%",
+      borderRadius: 3,
+      border: theme => `1px solid ${theme.palette.divider}`,
+    }}
+  >
+    <CardContent sx={{ p: 2.5 }}>
+      <Typography color="text.secondary" fontWeight={600}>
+        {label}
+      </Typography>
+
+      <Typography variant="h5" fontWeight={700} color="primary">
+        {value}
+      </Typography>
+    </CardContent>
+  </Card>
+);
+
 const Info = ({
   label,
   value,
@@ -885,9 +1195,12 @@ const Info = ({
     <Stack
       direction={{ xs: "column", sm: "row" }}
       spacing={1}
-      sx={{ mb: 1 }}
+      sx={{
+        mb: 1,
+        py: 0.25,
+      }}
     >
-      <Typography color="text.secondary" minWidth={180}>
+      <Typography color="text.secondary" minWidth={180} fontWeight={500}>
         {label}:
       </Typography>
 
@@ -895,6 +1208,27 @@ const Info = ({
     </Stack>
   );
 };
+
+const SignatureLine = ({ label }: { label: string }) => (
+  <Box>
+    <Box
+      sx={{
+        borderBottom: "1px solid",
+        borderColor: "text.primary",
+        height: 36,
+      }}
+    />
+
+    <Typography
+      variant="body2"
+      color="text.secondary"
+      textAlign="center"
+      sx={{ mt: 1 }}
+    >
+      {label}
+    </Typography>
+  </Box>
+);
 
 const TableHeader = ({ children }: { children: React.ReactNode }) => (
   <th
@@ -967,6 +1301,12 @@ const formatStatus = (status?: string | null) => {
   };
 
   return labels[status] || status.replaceAll("_", " ");
+};
+
+const formatOptionalStatus = (status?: string | null) => {
+  if (!status) return "—";
+
+  return formatStatus(status);
 };
 
 const getTimestamp = (value?: string | null) =>

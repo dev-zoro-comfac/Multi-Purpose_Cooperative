@@ -60,7 +60,11 @@ const AllNotifications = () => {
   return (
     <Stack gap={2}>
       <Typography variant="h3" fontWeight="bold">
-        All Notifications
+        System Notifications
+      </Typography>
+
+      <Typography color="text.secondary">
+        Review cooperative system alerts, import/export results, and account workflow updates.
       </Typography>
 
       <Stack spacing={0} sx={{ flexGrow: 1, overflowY: "auto" }}>
@@ -295,7 +299,7 @@ const AllNotifications = () => {
         ) : (
           <Box sx={{ p: 2, textAlign: "center" }}>
             <Typography variant="body2" color="textSecondary">
-              No Notifications
+              No system notifications recorded yet.
             </Typography>
           </Box>
         )}

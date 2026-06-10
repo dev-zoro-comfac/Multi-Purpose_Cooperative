@@ -86,15 +86,14 @@ export default function EditRoleForm({ role }: EditRoleFormProps) {
     <Stack sx={{ gap: 2 }}>
       <Box sx={{ mb: 4 }}>
         <Stack flexDirection="row" sx={{ gap: 1 }}>
-          <Typography variant="h3">Update permission for</Typography>
+          <Typography variant="h3">Configure access for</Typography>
           <Typography variant="h3" color="primary">
             {role.name}
           </Typography>
         </Stack>
 
         <Typography variant="body1">
-          Select the appropriate permissions for this role by checking the
-          options below.
+          Select the system permissions this cooperative role can access.
         </Typography>
       </Box>
 
@@ -124,7 +123,7 @@ export default function EditRoleForm({ role }: EditRoleFormProps) {
                 </Typography>
               </Stack>
               <Typography variant="h6">
-                Edit permission of this role below.
+                Configure account access for this role below.
               </Typography>
               {errors.permissions && (
                 <Typography color="error">

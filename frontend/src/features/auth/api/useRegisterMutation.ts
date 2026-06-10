@@ -4,11 +4,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "@/lib/axios-instance";
 import { authQueryKey } from "./useAuthenticatedUser";
 
-const register = async () => {
-  await axiosInstance.post("auth/spa/register", {
-    email: "test@example.com",
-    password: "password",
-  });
+type RegisterPayload = {
+  email: string;
+  password: string;
+};
+
+const register = async (data: RegisterPayload) => {
+  await axiosInstance.post("auth/spa/register", data);
 };
 
 export const useRegisterMutation = () => {

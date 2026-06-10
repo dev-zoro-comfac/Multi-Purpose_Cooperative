@@ -7,11 +7,12 @@ class LoanCalculatorService
     public function calculate(array $data): array
     {
         $loanAmount = (float) ($data['loan_amount'] ?? $data['amount_requested'] ?? 0);
-        $annualRate = (float) ($data['annual_rate'] ?? 15);
-        $numberOfPaydays = (int) ($data['number_of_paydays'] ?? 24);
-        $processingFee = (float) ($data['processing_fee'] ?? 50);
+        $annualRate = (float) ($data['annual_rate'] ?? config('loan.default_annual_rate'));
+        $numberOfPaydays = (int) ($data['number_of_paydays'] ?? config('loan.default_number_of_paydays'));
+        $processingFee = (float) ($data['processing_fee'] ?? config('loan.default_processing_fee'));
+        $computationMethod = $data['computation_method'] ?? config('loan.default_computation_method');
 
-        $paymentFrequency = $data['payment_frequency'] ?? 'semi_monthly';
+        $paymentFrequency = $data['payment_frequency'] ?? config('loan.default_payment_frequency');
 
         $periodsPerYear = match ($paymentFrequency) {
             'monthly' => 12,
@@ -20,17 +21,24 @@ class LoanCalculatorService
         };
 
         $periodicRate = ($annualRate / 100) / $periodsPerYear;
-
-        $amortizationPerPayday = $this->pmt($periodicRate, $numberOfPaydays, $loanAmount);
+        $amortizationPerPayday = match ($computationMethod) {
+            'add_on_rate' => $this->addOnAmortization($loanAmount, $annualRate, $numberOfPaydays, $periodsPerYear),
+            'simple_interest' => $this->simpleInterestAmortization($loanAmount, $annualRate, $numberOfPaydays, $periodsPerYear),
+            default => $this->pmt($periodicRate, $numberOfPaydays, $loanAmount),
+        };
 
         $balance = $loanAmount;
         $schedule = [];
         $totalInterest = 0;
         $totalPrincipal = 0;
         $totalAmortization = 0;
+        $fixedInterest = match ($computationMethod) {
+            'add_on_rate', 'simple_interest' => $this->totalFlatInterest($loanAmount, $annualRate, $numberOfPaydays, $periodsPerYear) / max($numberOfPaydays, 1),
+            default => null,
+        };
 
         for ($i = 1; $i <= $numberOfPaydays; $i++) {
-            $interest = $balance * $periodicRate;
+            $interest = $fixedInterest ?? $balance * $periodicRate;
             $principal = $amortizationPerPayday - $interest;
 
             if ($i === $numberOfPaydays) {
@@ -60,6 +68,7 @@ class LoanCalculatorService
             'annual_rate' => round($annualRate, 2),
             'number_of_paydays' => $numberOfPaydays,
             'payment_frequency' => $paymentFrequency,
+            'computation_method' => $computationMethod,
             'periods_per_year' => $periodsPerYear,
             'periodic_rate' => round($periodicRate, 6),
             'amortization_per_payday' => round($amortizationPerPayday, 2),
@@ -80,5 +89,22 @@ class LoanCalculatorService
         }
 
         return ($rate * $presentValue) / (1 - pow(1 + $rate, -$periods));
+    }
+
+    private function addOnAmortization(float $loanAmount, float $annualRate, int $numberOfPaydays, int $periodsPerYear): float
+    {
+        return ($loanAmount + $this->totalFlatInterest($loanAmount, $annualRate, $numberOfPaydays, $periodsPerYear)) / max($numberOfPaydays, 1);
+    }
+
+    private function simpleInterestAmortization(float $loanAmount, float $annualRate, int $numberOfPaydays, int $periodsPerYear): float
+    {
+        return $this->addOnAmortization($loanAmount, $annualRate, $numberOfPaydays, $periodsPerYear);
+    }
+
+    private function totalFlatInterest(float $loanAmount, float $annualRate, int $numberOfPaydays, int $periodsPerYear): float
+    {
+        $timeInYears = $numberOfPaydays / max($periodsPerYear, 1);
+
+        return $loanAmount * ($annualRate / 100) * $timeInYears;
     }
 }

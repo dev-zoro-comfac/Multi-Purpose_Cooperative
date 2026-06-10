@@ -88,28 +88,28 @@ export const useUsersTable = () => {
         meta: { label: "Email" },
         cell: ({ getValue }) => renderCell(getValue()),
       }),
-      columnHelper.accessor("profile.first_name", {
+      columnHelper.accessor(row => row.profile?.first_name, {
         id: "first_name",
         header: "First Name",
         size: 200,
         meta: { label: "First Name" },
         cell: ({ getValue }) => renderCell(getValue()),
       }),
-      columnHelper.accessor("profile.middle_name", {
+      columnHelper.accessor(row => row.profile?.middle_name, {
         id: "middle_name",
         header: "Middle Name",
         size: 200,
         meta: { label: "Middle Name" },
         cell: ({ getValue }) => renderCell(getValue()),
       }),
-      columnHelper.accessor("profile.last_name", {
+      columnHelper.accessor(row => row.profile?.last_name, {
         id: "last_name",
         header: "Last Name",
         size: 200,
         meta: { label: "Last Name" },
         cell: ({ getValue }) => renderCell(getValue()),
       }),
-      columnHelper.accessor("profile.contact_number", {
+      columnHelper.accessor(row => row.profile?.contact_number, {
         id: "contact_number",
         header: "Contact Number",
         size: 200,

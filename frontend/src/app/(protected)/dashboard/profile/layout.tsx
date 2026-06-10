@@ -9,12 +9,12 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 const profileLinks = [
   {
     href: "/dashboard/profile",
-    label: "Profile Details",
+    label: "Account Profile",
     icon: <PersonOutlineIcon />,
   },
   {
     href: "/dashboard/profile/change-password",
-    label: "Change Password",
+    label: "Login Credentials",
     icon: <LockOutlinedIcon />,
   },
 ];

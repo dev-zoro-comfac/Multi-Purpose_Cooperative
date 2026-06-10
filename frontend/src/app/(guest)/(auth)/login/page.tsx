@@ -1,9 +1,9 @@
 "use client";
 
-import LoginForm from "@/features/auth/components/login/Form";
+import LoginContainer from "@/features/auth/components/login/Container";
 
 const LoginPage = () => {
-  return <LoginForm />;
+  return <LoginContainer />;
 };
 
 export default LoginPage;

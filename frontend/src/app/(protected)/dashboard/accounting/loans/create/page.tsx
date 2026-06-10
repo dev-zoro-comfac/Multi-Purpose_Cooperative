@@ -8,6 +8,7 @@ import {
   Box,
   Button,
   Container,
+  Grid,
   MenuItem,
   Paper,
   Snackbar,
@@ -21,6 +22,17 @@ import PersonIcon from "@mui/icons-material/Person";
 import WorkIcon from "@mui/icons-material/Work";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import { useAuthenticatedUser } from "@/features/auth/api/useAuthenticatedUser";
+import {
+  CO_MAKER_AMOUNT_THRESHOLD,
+  DEFAULT_COMPUTATION_METHOD,
+  DEFAULT_LOAN_ANNUAL_RATE,
+  DEFAULT_LOAN_TERM_MONTHS,
+  DEFAULT_PAYMENT_FREQUENCY,
+  DEFAULT_PAYMENT_METHOD,
+  DEFAULT_PROCESSING_FEE,
+  PAYDAYS_PER_MONTH,
+  PERIODS_PER_YEAR,
+} from "@/constant/loan";
 
 type Member = {
   id: number;
@@ -38,23 +50,33 @@ const emptyForm = {
   address: "",
   borrower_email: "",
   borrower_contact_number: "",
+  borrower_age: "",
+  borrower_civil_status: "",
+  take_home_pay_15: "",
+  take_home_pay_30: "",
+  member_since: "",
   employer: "",
   position: "",
   length_of_service: "",
   member_id: "",
   loan_type: "regular_member",
   amount_requested: "",
-  interest_rate: "12",
-  term_months: "",
-  payment_frequency: "monthly",
+  interest_rate: String(DEFAULT_LOAN_ANNUAL_RATE),
+  term_months: String(DEFAULT_LOAN_TERM_MONTHS),
+  payment_frequency: DEFAULT_PAYMENT_FREQUENCY,
+  preferred_payment_method: DEFAULT_PAYMENT_METHOD,
+  computation_method: DEFAULT_COMPUTATION_METHOD,
   total_contribution: "",
   loan_balance: "",
+  processing_fee: String(DEFAULT_PROCESSING_FEE),
   purpose: "",
 
   co_maker_name: "",
 co_maker_email: "",
 co_maker_contact_number: "",
 co_maker_address: "",
+co_maker_age: "",
+co_maker_civil_status: "",
 co_maker_employer: "",
 co_maker_length_of_service: "",
 
@@ -153,23 +175,27 @@ export default function CreateLoanPage() {
  const computations = useMemo(() => {
   const amount = Number(form.amount_requested || 0);
   const annualRate = Number(form.interest_rate || 0) / 100;
-  const numberOfPaydays = Number(form.term_months || 0);
+  const selectedMonths = Number(form.term_months || 0);
+  const numberOfPaydays = selectedMonths * PAYDAYS_PER_MONTH;
 
   const periodsPerYear =
     form.payment_frequency === "semi_monthly"
-      ? 24
+      ? PERIODS_PER_YEAR
       : form.payment_frequency === "weekly"
       ? 52
       : 12;
 
   const ratePerPeriod = annualRate / periodsPerYear;
+  const computationMethod = form.computation_method || "diminishing_balance";
+  const flatInterest =
+    amount * annualRate * (numberOfPaydays / periodsPerYear);
 
   const amortizationPerPayday =
     amount > 0 && numberOfPaydays > 0
-      ? ratePerPeriod > 0
+      ? computationMethod === "diminishing_balance" && ratePerPeriod > 0
         ? (amount * ratePerPeriod) /
           (1 - Math.pow(1 + ratePerPeriod, -numberOfPaydays))
-        : amount / numberOfPaydays
+        : (amount + flatInterest) / numberOfPaydays
       : 0;
 
   let balance = amount;
@@ -178,7 +204,10 @@ export default function CreateLoanPage() {
   const schedule = Array.from(
     { length: numberOfPaydays },
     (_, index) => {
-      const interest = balance * ratePerPeriod;
+      const interest =
+        computationMethod === "diminishing_balance"
+          ? balance * ratePerPeriod
+          : flatInterest / Math.max(numberOfPaydays, 1);
       const principal = amortizationPerPayday - interest;
       balance = Math.max(balance - principal, 0);
       totalInterest += interest;
@@ -193,22 +222,33 @@ export default function CreateLoanPage() {
     }
   );
 
+  const processingFee = Number(form.processing_fee || 0);
   const totalPayable = amount + totalInterest;
+  const netProceeds = Math.max(amount - processingFee, 0);
 
   return {
   interestAmount: totalInterest,
   totalPayable,
   monthlyAmortization: amortizationPerPayday,
+  processingFee,
+  netProceeds,
   schedule,
   ratePerPeriod,
   periodsPerYear,
+  computationMethod,
 };
 }, [
   form.amount_requested,
   form.interest_rate,
   form.term_months,
   form.payment_frequency,
+  form.computation_method,
+  form.processing_fee,
 ]);
+
+  const requiresCoMaker =
+    form.loan_type === "non_member" ||
+    Number(form.amount_requested || 0) > CO_MAKER_AMOUNT_THRESHOLD;
 
   const formatPeso = (value: number) =>
     new Intl.NumberFormat("en-PH", {
@@ -230,14 +270,24 @@ export default function CreateLoanPage() {
       return showMessage("Please enter a valid loan amount.");
     }
     if (!form.term_months || Number(form.term_months) <= 0) {
-      return showMessage("Please enter a valid loan term.");
+      return showMessage("Please select a valid payment term.");
+    }
+    if (requiresCoMaker && !form.co_maker_name.trim()) {
+      return showMessage(
+        "Co-maker name is required for non-member loans or loans above ₱10,000."
+      );
+    }
+    if (requiresCoMaker && !form.co_maker_contact_number.trim()) {
+      return showMessage(
+        "Co-maker contact number is required for non-member loans or loans above ₱10,000."
+      );
     }
     if (!form.purpose.trim()) return showMessage("Loan purpose is required.");
 
     try {
       setLoading(true);
 
-      await createLoan({
+      const response = await createLoan({
   borrower_name:
     `${form.first_name} ${form.middle_name} ${form.last_name} ${form.suffix}`
       .replace(/\s+/g, " ")
@@ -248,6 +298,11 @@ export default function CreateLoanPage() {
         borrower_contact_number:
           form.borrower_contact_number,
         borrower_address: form.address,
+        borrower_age: form.borrower_age ? Number(form.borrower_age) : null,
+        borrower_civil_status: form.borrower_civil_status,
+        take_home_pay_15: Number(form.take_home_pay_15 || 0),
+        take_home_pay_30: Number(form.take_home_pay_30 || 0),
+        member_since: form.member_since || null,
         borrower_employer: form.employer,
         borrower_position: form.position,
         borrower_length_of_service: form.length_of_service,
@@ -256,8 +311,10 @@ export default function CreateLoanPage() {
         loan_type: form.loan_type,
         amount_requested: Number(form.amount_requested),
         annual_rate: Number(form.interest_rate),
-        number_of_paydays: Number(form.term_months),
+        number_of_paydays: Number(form.term_months) * PAYDAYS_PER_MONTH,
         payment_frequency: form.payment_frequency,
+        preferred_payment_method: form.preferred_payment_method,
+        computation_method: form.computation_method,
 
         total_contribution: Number(form.total_contribution || 0),
         outstanding_loan_balance: Number(form.loan_balance || 0),
@@ -267,13 +324,17 @@ export default function CreateLoanPage() {
         co_maker_email: form.co_maker_email,
         co_maker_contact_number: form.co_maker_contact_number,
         co_maker_address: form.co_maker_address,
+        co_maker_age: form.co_maker_age ? Number(form.co_maker_age) : null,
+        co_maker_civil_status: form.co_maker_civil_status,
         co_maker_employer: form.co_maker_employer,
         co_maker_length_of_service: form.co_maker_length_of_service,
 
-        processing_fee: 50,
+        processing_fee: Number(form.processing_fee || 0),
       });
 
-      showMessage("Loan application created successfully.");
+      const createdLoanId = response.data?.data?.id;
+
+      showMessage("Loan record created and official forms generated.");
 
       setTimeout(() => {
   const roles = (
@@ -281,16 +342,25 @@ export default function CreateLoanPage() {
       roles?: string[];
     } | null
   )?.roles ?? [];
+  const isBorrowerOnly =
+    (roles.includes("member") || roles.includes("non-member")) &&
+    !roles.includes("admin") &&
+    !roles.includes("accounting");
 
-  if (
-    roles.includes("member") ||
-    roles.includes("non-member")
-  ) {
-    router.push("/dashboard/member");
+  if (isBorrowerOnly) {
+    router.push(
+      createdLoanId
+        ? `/dashboard/member/loans/${createdLoanId}`
+        : "/dashboard/member"
+    );
     return;
   }
 
-  router.push("/dashboard/accounting/loans");
+  router.push(
+    createdLoanId
+      ? `/dashboard/accounting/loans/${createdLoanId}`
+      : "/dashboard/accounting/loans"
+  );
 }, 1200);
 
 } catch (error) {
@@ -302,23 +372,51 @@ export default function CreateLoanPage() {
 };
 
   return (
-    <Container maxWidth="md">
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 3, mt: 4 }}>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Stack spacing={2} sx={{ mb: 3 }}>
+        <Box>
+          <Typography variant="h4" fontWeight={800} color="primary">
+            Application for Loan
+          </Typography>
+          <Typography color="text.secondary">
+            Accounting form based on the public borrower application, with
+            internal member selection and credit committee computation fields.
+          </Typography>
+        </Box>
+
+        <Alert severity="info">
+          Use this page when accounting encodes a walk-in or assisted loan
+          application. The computation, co-maker rule, and payment term now
+          follow the public application form.
+        </Alert>
+      </Stack>
+
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, md: 8 }}>
+      <Paper
+        elevation={3}
+        sx={{
+          p: 4,
+          borderRadius: 3,
+          border: theme => `1px solid ${theme.palette.divider}`,
+        }}
+      >
          
 
         <Box mt={4}>
           <Typography variant="h4" fontWeight={700} gutterBottom>
-            Create Loan Application
+            Application for Loan
           </Typography>
 
           <Typography variant="body1" color="text.secondary" mb={3}>
-            Fill out the required borrower and loan information.
+            Encode the member details, co-maker information, loan purpose, and
+            cooperative computation before submitting the application.
           </Typography>
 
           <Box display="flex" alignItems="center" gap={1} mt={2} mb={1}>
             <PersonIcon color="primary" />
             <Typography variant="h6" fontWeight={700}>
-              Personal Information
+              Borrower Information
             </Typography>
           </Box>
 
@@ -408,6 +506,80 @@ export default function CreateLoanPage() {
   />
 </Box>
 
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+              gap: 2,
+            }}
+          >
+            <TextField
+              type="number"
+              fullWidth
+              margin="normal"
+              label="Age"
+              name="borrower_age"
+              value={form.borrower_age}
+              onChange={handleChange}
+            />
+
+            <TextField
+              select
+              fullWidth
+              margin="normal"
+              label="Civil Status"
+              name="borrower_civil_status"
+              value={form.borrower_civil_status}
+              onChange={handleChange}
+            >
+              <MenuItem value="">Select civil status</MenuItem>
+              <MenuItem value="single">Single</MenuItem>
+              <MenuItem value="married">Married</MenuItem>
+              <MenuItem value="widowed">Widowed</MenuItem>
+              <MenuItem value="separated">Separated</MenuItem>
+            </TextField>
+
+            <TextField
+              type="number"
+              fullWidth
+              margin="normal"
+              label="Take Home Pay - 15th"
+              name="take_home_pay_15"
+              value={form.take_home_pay_15}
+              onChange={handleChange}
+            />
+
+            <TextField
+              type="number"
+              fullWidth
+              margin="normal"
+              label="Take Home Pay - 30th"
+              name="take_home_pay_30"
+              value={form.take_home_pay_30}
+              onChange={handleChange}
+            />
+
+            <TextField
+              type="date"
+              fullWidth
+              margin="normal"
+              label="Coop Member Since"
+              name="member_since"
+              value={form.member_since}
+              onChange={handleChange}
+              InputLabelProps={{ shrink: true }}
+            />
+
+            <TextField
+              fullWidth
+              margin="normal"
+              label="ID Number"
+              value={form.member_id || "For manual verification"}
+              InputProps={{ readOnly: true }}
+              helperText="Uses the selected member record when available."
+            />
+          </Box>
+
           <Box display="flex" alignItems="center" gap={1} mt={3} mb={1}>
             <WorkIcon color="primary" />
             <Typography variant="h6" fontWeight={700}>
@@ -458,6 +630,15 @@ export default function CreateLoanPage() {
   </Typography>
 </Box>
 
+        <Alert
+          severity={requiresCoMaker ? "warning" : "info"}
+          sx={{ mb: 2 }}
+        >
+          {requiresCoMaker
+            ? "Co-maker is required for non-member loans or loans above ₱10,000."
+            : "Co-maker is optional for small member loans. It may be required for larger or non-member loans."}
+        </Alert>
+
         <Box
            sx={{
              display: "grid",
@@ -466,6 +647,7 @@ export default function CreateLoanPage() {
   }}
 >
   <TextField
+    required={requiresCoMaker}
     fullWidth
     margin="normal"
     label="Co-maker Name"
@@ -475,6 +657,7 @@ export default function CreateLoanPage() {
   />
 
   <TextField
+    required={requiresCoMaker}
     fullWidth
     margin="normal"
     label="Co-maker Email"
@@ -502,6 +685,32 @@ export default function CreateLoanPage() {
   />
 
   <TextField
+    type="number"
+    fullWidth
+    margin="normal"
+    label="Co-maker Age"
+    name="co_maker_age"
+    value={form.co_maker_age || ""}
+    onChange={handleChange}
+  />
+
+  <TextField
+    select
+    fullWidth
+    margin="normal"
+    label="Co-maker Civil Status"
+    name="co_maker_civil_status"
+    value={form.co_maker_civil_status || ""}
+    onChange={handleChange}
+  >
+    <MenuItem value="">Select civil status</MenuItem>
+    <MenuItem value="single">Single</MenuItem>
+    <MenuItem value="married">Married</MenuItem>
+    <MenuItem value="widowed">Widowed</MenuItem>
+    <MenuItem value="separated">Separated</MenuItem>
+  </TextField>
+
+  <TextField
     fullWidth
     margin="normal"
     label="Co-maker Employer"
@@ -523,7 +732,7 @@ export default function CreateLoanPage() {
 <Box display="flex" alignItems="center" gap={1} mt={3} mb={1}>
   <AccountBalanceIcon color="primary" />
   <Typography variant="h6" fontWeight={700}>
-    Loan Information
+    Credit Committee Computation
   </Typography>
 </Box>
 
@@ -548,8 +757,8 @@ export default function CreateLoanPage() {
                 select
                 fullWidth
                 margin="normal"
-                label="Member (optional)"
-                helperText="Select an existing member or leave blank."
+                label="Registered Member (optional)"
+                helperText="Select an existing cooperative member or leave blank for non-member loans."
                 name="member_id"
                 value={form.member_id}
                 onChange={handleChange}
@@ -619,42 +828,82 @@ export default function CreateLoanPage() {
               type="number"
               fullWidth
               margin="normal"
-              label="Amount Requested"
+              label="Amount of Loan Application"
               name="amount_requested"
               value={form.amount_requested}
               onChange={handleChange}
             />
 
             <TextField
+              select
               required
-              type="number"
               fullWidth
               margin="normal"
-              label="Term (Months)"
+              label="Preferred Payment Term"
               name="term_months"
               value={form.term_months}
               onChange={handleChange}
-            />
+              helperText="The cooperative computes this as two payments per month."
+            >
+              <MenuItem value="3">3 months</MenuItem>
+              <MenuItem value="6">6 months</MenuItem>
+              <MenuItem value="9">9 months</MenuItem>
+              <MenuItem value="12">12 months</MenuItem>
+              <MenuItem value="18">18 months</MenuItem>
+              <MenuItem value="24">24 months</MenuItem>
+            </TextField>
 
             <TextField
               select
               fullWidth
               margin="normal"
-              label="Payment Frequency"
+              label="Interest Option Selected"
               name="payment_frequency"
               value={form.payment_frequency}
               onChange={handleChange}
             >
-              <MenuItem value="monthly">Monthly</MenuItem>
               <MenuItem value="semi_monthly">Semi-Monthly</MenuItem>
+              <MenuItem value="monthly">Monthly</MenuItem>
               <MenuItem value="weekly">Weekly</MenuItem>
+            </TextField>
+
+            <TextField
+              select
+              fullWidth
+              margin="normal"
+              label="Preferred Payment Method"
+              name="preferred_payment_method"
+              value={form.preferred_payment_method}
+              onChange={handleChange}
+              helperText="Records the borrower's preferred way of paying. Accounting verifies actual payments."
+            >
+              <MenuItem value="salary_deduction">Salary Deduction</MenuItem>
+              <MenuItem value="cash">Cash / Manual Payment</MenuItem>
+              <MenuItem value="online_transfer">Online Transfer</MenuItem>
+            </TextField>
+
+            <TextField
+              select
+              fullWidth
+              margin="normal"
+              label="Computation Method"
+              name="computation_method"
+              value={form.computation_method}
+              onChange={handleChange}
+              helperText={getComputationMethodDescription(form.computation_method)}
+            >
+              <MenuItem value="diminishing_balance">
+                Diminishing Balance
+              </MenuItem>
+              <MenuItem value="add_on_rate">Add-On Rate</MenuItem>
+              <MenuItem value="simple_interest">Simple Interest</MenuItem>
             </TextField>
 
             <TextField
               type="number"
               fullWidth
               margin="normal"
-              label="Interest Rate (%)"
+              label="Annual Interest Rate (%)"
               name="interest_rate"
               value={form.interest_rate}
               onChange={handleChange}
@@ -664,7 +913,17 @@ export default function CreateLoanPage() {
               type="number"
               fullWidth
               margin="normal"
-              label="Total Contribution"
+              label="Processing Fee"
+              name="processing_fee"
+              value={form.processing_fee}
+              onChange={handleChange}
+            />
+
+            <TextField
+              type="number"
+              fullWidth
+              margin="normal"
+              label="Total Contribution as of Date"
               name="total_contribution"
               value={form.total_contribution}
               onChange={handleChange}
@@ -674,7 +933,7 @@ export default function CreateLoanPage() {
               type="number"
               fullWidth
               margin="normal"
-              label="Outstanding Loan Balance"
+              label="Outstanding Cooperative Loan as of Date"
               name="loan_balance"
               value={form.loan_balance}
               onChange={handleChange}
@@ -692,7 +951,7 @@ export default function CreateLoanPage() {
             }}
           >
             <Typography variant="h6" fontWeight={700} mb={3}>
-              Loan Computation
+              Credit Committee Computation Preview
             </Typography>
 
             <Box
@@ -703,7 +962,7 @@ export default function CreateLoanPage() {
               }}
             >
               <ComputationCard
-                label="Add Interest"
+                label="Total Interest"
                 value={formatPeso(computations.interestAmount)}
                 color="primary.main"
               />
@@ -715,9 +974,27 @@ export default function CreateLoanPage() {
               />
 
               <ComputationCard
-                label="Amortization Per Payment"
+                label="Amortization Per Pay Day"
                 value={formatPeso(computations.monthlyAmortization)}
                 color="warning.main"
+              />
+
+              <ComputationCard
+                label="Net Proceeds"
+                value={formatPeso(computations.netProceeds)}
+                color="info.main"
+              />
+
+              <ComputationCard
+                label="Amount of Loan Approved"
+                value={formatPeso(Number(form.amount_requested || 0))}
+                color="success.dark"
+              />
+
+              <ComputationCard
+                label="Maximum Loan if Disapproved"
+                value={formatPeso(Math.max(Number(form.total_contribution || 0) * 2 - Number(form.loan_balance || 0), 0))}
+                color="text.primary"
               />
             </Box>
           </Box>
@@ -728,7 +1005,7 @@ export default function CreateLoanPage() {
     fontWeight={700}
     gutterBottom
   >
-    Amortization Schedule Preview
+    Payment Schedule Preview
   </Typography>
 
   <Box
@@ -820,12 +1097,12 @@ export default function CreateLoanPage() {
   }}
 >
   <Typography variant="h6" fontWeight={700} gutterBottom>
-    Loan Summary
+    Loan Computation Summary
   </Typography>
 
   <Stack spacing={1}>
     <Typography>
-      <b>Total Loan Amount:</b>{" "}
+      <b>Principal Applied:</b>{" "}
       {formatPeso(Number(form.amount_requested || 0))}
     </Typography>
 
@@ -840,8 +1117,28 @@ export default function CreateLoanPage() {
     </Typography>
 
     <Typography>
+      <b>Processing Fee:</b>{" "}
+      {formatPeso(computations.processingFee)}
+    </Typography>
+
+    <Typography>
+      <b>Net Proceeds:</b>{" "}
+      {formatPeso(computations.netProceeds)}
+    </Typography>
+
+    <Typography>
+      <b>Computation Method:</b>{" "}
+      {formatStatus(form.computation_method)}
+    </Typography>
+
+    <Typography>
       <b>Payment Frequency:</b>{" "}
       {form.payment_frequency.replaceAll("_", " ")}
+    </Typography>
+
+    <Typography>
+      <b>Preferred Payment Method:</b>{" "}
+      {formatStatus(form.preferred_payment_method)}
     </Typography>
 
     <Typography>
@@ -850,14 +1147,80 @@ export default function CreateLoanPage() {
     </Typography>
 
     <Typography>
-      <b>Number of Payments:</b>{" "}
-      {form.term_months || 0}
+      <b>Payment Term:</b> {form.term_months || 0} months /{" "}
+      {Number(form.term_months || 0) * PAYDAYS_PER_MONTH} paydays
     </Typography>
   </Stack>
 </Box>
 </Box>
 
+<Box
+  sx={{
+    mt: 3,
+    p: 3,
+    borderRadius: 3,
+    bgcolor: "#fff7ed",
+    border: "1px solid",
+    borderColor: "warning.light",
+  }}
+>
+  <Typography variant="h6" fontWeight={700} gutterBottom>
+    Payment Agreement / Promissory Note Preview
+  </Typography>
 
+  <Typography color="text.secondary" sx={{ mb: 2 }}>
+    This simple preview follows the printed cooperative form. The generated PDF
+    will still be downloaded, printed, signed, and uploaded as a wet-signed copy.
+  </Typography>
+
+  <Stack spacing={1.25}>
+    {form.preferred_payment_method === "salary_deduction" ? (
+      <Typography>
+        I,{" "}
+        <b>
+          {[form.first_name, form.middle_name, form.last_name, form.suffix]
+            .filter(Boolean)
+            .join(" ") || "Borrower Name"}
+        </b>
+        , authorize the cooperative to deduct{" "}
+        <b>{formatPeso(computations.monthlyAmortization)}</b> every{" "}
+        {form.payment_frequency.replaceAll("_", " ")} pay day until the loan is
+        fully paid.
+      </Typography>
+    ) : (
+      <Typography>
+        I,{" "}
+        <b>
+          {[form.first_name, form.middle_name, form.last_name, form.suffix]
+            .filter(Boolean)
+            .join(" ") || "Borrower Name"}
+        </b>
+        , selected <b>{formatStatus(form.preferred_payment_method)}</b>.
+        Accounting will verify payment through office receipt or proof of
+        transfer.
+      </Typography>
+    )}
+
+    <Typography>
+      Total loan amount payable is{" "}
+      <b>{formatPeso(computations.totalPayable)}</b>, with co-maker{" "}
+      <b>{form.co_maker_name || "Co-maker Name"}</b> acknowledging the obligation
+      as required by the cooperative loan process.
+    </Typography>
+
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+        gap: 3,
+        mt: 2,
+      }}
+    >
+      <SignatureLine label="Borrower Signature" />
+      <SignatureLine label="Co-maker Signature" />
+    </Box>
+  </Stack>
+</Box>
 
           <TextField
             required
@@ -931,6 +1294,83 @@ export default function CreateLoanPage() {
           </Box>
         </Box>
       </Paper>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Paper
+            elevation={3}
+            sx={{
+              p: 3,
+              borderRadius: 4,
+              position: { md: "sticky" },
+              top: 96,
+              border: theme => `1px solid ${theme.palette.divider}`,
+            }}
+          >
+            <Typography variant="h5" fontWeight={800} gutterBottom>
+              Application Preview
+            </Typography>
+
+            <Typography color="text.secondary" sx={{ mb: 2 }}>
+              Quick check before creating the loan record and generated forms.
+            </Typography>
+
+            <Stack spacing={1.25}>
+              <Typography>
+                <b>Borrower:</b>{" "}
+                {[form.first_name, form.middle_name, form.last_name, form.suffix]
+                  .filter(Boolean)
+                  .join(" ") || "Not encoded yet"}
+              </Typography>
+
+              <Typography>
+                <b>Loan Amount:</b>{" "}
+                {formatPeso(Number(form.amount_requested || 0))}
+              </Typography>
+
+              <Typography>
+                <b>Payment Term:</b> {form.term_months || 0} months /{" "}
+                {Number(form.term_months || 0) * PAYDAYS_PER_MONTH} paydays
+              </Typography>
+
+              <Typography>
+                <b>Amortization Per Payday:</b>{" "}
+                {formatPeso(computations.monthlyAmortization)}
+              </Typography>
+
+              <Typography>
+                <b>Total Interest:</b>{" "}
+                {formatPeso(computations.interestAmount)}
+              </Typography>
+
+              <Typography>
+                <b>Total Payable:</b>{" "}
+                {formatPeso(computations.totalPayable)}
+              </Typography>
+
+              <Typography>
+                <b>Net Proceeds:</b>{" "}
+                {formatPeso(computations.netProceeds)}
+              </Typography>
+
+              <Typography>
+                <b>Payment Method:</b>{" "}
+                {formatStatus(form.preferred_payment_method)}
+              </Typography>
+
+              <Alert
+                severity={requiresCoMaker ? "warning" : "info"}
+                variant="outlined"
+                sx={{ mt: 1 }}
+              >
+                {requiresCoMaker
+                  ? "Co-maker is required for this application."
+                  : "Co-maker is optional for this application."}
+              </Alert>
+            </Stack>
+          </Paper>
+        </Grid>
+      </Grid>
 
       <Snackbar
         open={snackbarOpen}
@@ -984,3 +1424,45 @@ const ComputationCard = ({
     </Paper>
   );
 };
+
+const formatStatus = (status?: string | null) => {
+  if (!status) return "Unknown";
+
+  return status
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const getComputationMethodDescription = (method: string) => {
+  const descriptions: Record<string, string> = {
+    diminishing_balance:
+      "Interest is computed on the remaining balance. This is the default cooperative method.",
+    add_on_rate:
+      "Total interest is added to the principal, then divided equally per payment.",
+    simple_interest:
+      "Interest is based on the original principal, rate, and loan term.",
+  };
+
+  return descriptions[method] || descriptions.diminishing_balance;
+};
+
+const SignatureLine = ({ label }: { label: string }) => (
+  <Box>
+    <Box
+      sx={{
+        borderBottom: "1px solid",
+        borderColor: "text.primary",
+        height: 36,
+      }}
+    />
+
+    <Typography
+      variant="body2"
+      color="text.secondary"
+      textAlign="center"
+      sx={{ mt: 1 }}
+    >
+      {label}
+    </Typography>
+  </Box>
+);

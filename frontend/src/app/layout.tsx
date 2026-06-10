@@ -13,8 +13,13 @@ const publicSans = Public_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "App",
-  description: "App Boilerplate",
+  title: "Cornersteel Cooperative",
+  description: "Cornersteel Cooperative loan and member management system",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/images/cornersteel-logo.png",
+  },
 };
 
 export default function RootLayout({ children }: RouteLayout) {

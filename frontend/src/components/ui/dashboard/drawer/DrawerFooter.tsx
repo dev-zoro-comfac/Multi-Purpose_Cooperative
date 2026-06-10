@@ -12,11 +12,12 @@ const DrawerFooter = () => {
     <Toolbar
       sx={{
         display: "flex",
-        gap: 2,
+        gap: 1.5,
         alignItems: "center",
         zIndex: theme => theme.zIndex.appBar + 1,
         backgroundColor: theme => theme.palette.common.white,
         borderTop: theme => `1px solid ${theme.palette.divider}`,
+        px: 2,
       }}
     >
       <Box>
@@ -31,11 +32,21 @@ const DrawerFooter = () => {
           </Avatar>
         </Link>
       </Box>
-      <Stack sx={{ flexDirection: "column", gap: 0, lineHeight: 1 }}>
+      <Stack
+        sx={{
+          flexDirection: "column",
+          gap: 0,
+          lineHeight: 1,
+          minWidth: 0,
+          flex: 1,
+        }}
+      >
         <Link href="/dashboard/profile">
           <Button
             sx={{
-              maxWidth: "120px",
+              maxWidth: "100%",
+              minWidth: 0,
+              justifyContent: "flex-start",
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -44,6 +55,7 @@ const DrawerFooter = () => {
               p: 0,
               color: "primary",
               fontWeight: "bold",
+              textTransform: "none",
             }}
           >
             {data?.data?.name ?? ""}
@@ -53,7 +65,7 @@ const DrawerFooter = () => {
         <Typography
           variant="subtitle2"
           sx={{
-            maxWidth: "200px",
+            maxWidth: "100%",
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -64,7 +76,7 @@ const DrawerFooter = () => {
           {firstRoleNameElement}
         </Typography>
       </Stack>
-      <Box sx={{ ml: "auto" }}>
+      <Box sx={{ flexShrink: 0 }}>
         <LogoutButton />
       </Box>
     </Toolbar>

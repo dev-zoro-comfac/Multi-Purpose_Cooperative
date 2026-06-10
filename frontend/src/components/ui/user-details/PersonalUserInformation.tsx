@@ -79,8 +79,8 @@ const PersonalUserInformation = ({ user }: PPersonalUserInformation) => {
     <Paper
       sx={{
         border: theme => `1px solid ${theme.palette.divider}`,
-        px: 1.5,
-        py: 0.5,
+        borderRadius: 3,
+        overflow: "hidden",
       }}
       elevation={0}
     >
@@ -89,6 +89,7 @@ const PersonalUserInformation = ({ user }: PPersonalUserInformation) => {
         onSubmit={handleSubmit(onSubmit)}
         sx={{
           p: 3,
+          bgcolor: "background.paper",
         }}
       >
         <Stack
@@ -99,17 +100,16 @@ const PersonalUserInformation = ({ user }: PPersonalUserInformation) => {
           }}
           justifyContent="space-between"
         >
-          <Typography
-            variant="h4"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              height: "100%",
-              mb: 3,
-            }}
-          >
-            Personal Information
-          </Typography>
+          <Stack spacing={0.5}>
+            <Typography variant="h4" fontWeight={700}>
+              Contact Details
+            </Typography>
+
+            <Typography variant="body2" color="text.secondary">
+              Basic member information used for cooperative records and loan
+              communication.
+            </Typography>
+          </Stack>
           <Divider />
         </Stack>
 
@@ -188,7 +188,7 @@ const PersonalUserInformation = ({ user }: PPersonalUserInformation) => {
 
           <Grid size={{ xs: 12, md: 6 }}>
             <FormLabel sx={{ fontSize: 12 }} htmlFor="contact_number">
-              Contact Number
+              Mobile / Contact Number
             </FormLabel>
             <TextField
               id="contact_number"
@@ -202,6 +202,13 @@ const PersonalUserInformation = ({ user }: PPersonalUserInformation) => {
         </Grid>
 
         <Stack sx={{ mt: 3 }}>
+          {!isEditing && (
+            <Typography variant="body2" color="text.secondary">
+              Turn on Edit Profile above if you need to update your contact
+              details.
+            </Typography>
+          )}
+
           {isEditing && (
             <PermissionGuard requiredPermissions={[UserPermission.Update]}>
               <Button
